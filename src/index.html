@@ -1784,7 +1784,7 @@ async function _syncCloud(){
       { user_id:session.user.id, key:'teas',    value:teas    },
       { user_id:session.user.id, key:'wares',   value:wares   },
       { user_id:session.user.id, key:'records', value:records },
-    ]);
+    ], { onConflict:'user_id,key' });
   }catch(e){}
 }
 
