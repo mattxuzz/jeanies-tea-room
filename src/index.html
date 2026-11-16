@@ -495,6 +495,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192-v12.png">
 <link rel="apple-touch-icon" href="apple-touch-v12.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
 </head>
 <body>
 <header>
@@ -524,10 +525,32 @@
   <div class="ver">版本 v20261116 · 品鉴搜索 / 价格可选是否计入花费</div>
 </div>
 
+<!-- 登录遮罩 -->
+<div id="loginOverlay" style="display:none;position:fixed;inset:0;background:rgba(43,38,32,.72);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;padding:32px 28px;width:min(360px,90vw);box-shadow:0 8px 32px rgba(60,40,20,.18);">
+    <h2 style="font-family:'Songti SC','STSong',serif;color:#7a5230;margin:0 0 6px;font-size:20px;letter-spacing:2px;">珍珠的茶室</h2>
+    <p style="color:#8a8175;font-size:13px;margin:0 0 20px;">登录后数据自动在所有设备同步</p>
+    <input id="loginEmail" type="email" placeholder="邮箱" autocomplete="email"
+      style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid #e7e0d6;border-radius:8px;font-size:14px;margin-bottom:10px;outline:none;color:#2b2620;">
+    <input id="loginPwd" type="password" placeholder="密码（至少 6 位）" autocomplete="current-password"
+      style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid #e7e0d6;border-radius:8px;font-size:14px;margin-bottom:16px;outline:none;color:#2b2620;">
+    <div id="loginErr" style="display:none;font-size:13px;margin-bottom:12px;padding:8px 12px;border-radius:8px;background:#fdf0ee;color:#b5462f;"></div>
+    <button id="loginBtn" onclick="doLogin()"
+      style="width:100%;padding:11px;background:#7a5230;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:10px;">登录</button>
+    <button onclick="doSignup()"
+      style="width:100%;padding:11px;background:transparent;color:#7a5230;border:1px solid #7a5230;border-radius:8px;font-size:14px;cursor:pointer;">首次使用 → 注册账号</button>
+  </div>
+</div>
 <!-- 喝一泡 / 编辑 弹窗 -->
 <div class="mask" id="mask"><div class="modal" id="modal"></div></div>
 
 <script>
+/* ============ Supabase ============ */
+/* anon/publishable key 设计为可公开：RLS 策略限制只有已登录用户才能读写自己的数据 */
+const _SUPA = window.supabase.createClient(
+  'https://wrcxyprfgsowvmxomrju.supabase.co',
+  'sb_publishable_KO-nXbLuNiphNyU5pvm4aw_quJkMdNN'
+);
 /* ============ 数据 ============ */
 const SEED = {
  "teas": [
@@ -1751,6 +1774,18 @@ function save(){
     localStorage.setItem(STORE_W,JSON.stringify(wares));
     localStorage.setItem(STORE_R,JSON.stringify(records));
   } catch(e){ /* 浏览器禁用 localStorage（如部分 file:// 环境）时，仅保留在内存中，请用「导出备份」留存 */ }
+  _syncCloud();
+}
+async function _syncCloud(){
+  try{
+    const { data:{ session } } = await _SUPA.auth.getSession();
+    if(!session) return;
+    await _SUPA.from('store').upsert([
+      { user_id:session.user.id, key:'teas',    value:teas    },
+      { user_id:session.user.id, key:'wares',   value:wares   },
+      { user_id:session.user.id, key:'records', value:records },
+    ]);
+  }catch(e){}
 }
 
 let teas, wares, records;
@@ -3239,6 +3274,7 @@ window.addEventListener('error',e=>{
   el.textContent=dailyText();
   el.title=dateLabel(d);
 })();
+const _hadUrlData = /[?&]d=/.test(location.search||'');
 /* 同步链接自动载入：打开带 ?d= 的链接即把数据导入当前设备（用 query 而非 hash，避免被托管平台根路径规范化时丢弃）
    支持两种格式：
    ① 紧凑增量/全量（{fmt:'diff'|'full', teas,wares,records}）—— 本 App「生成同步链接/备份码」产出；
@@ -3274,7 +3310,84 @@ window.addEventListener('error',e=>{
     }
   }catch(e){ /* 无效参数，忽略 */ }
 })();
-render();
+
+(async function initApp(){
+  /* URL 参数已触发数据替换（save() 已调用 _syncCloud），直接渲染，云端会异步更新 */
+  if(_hadUrlData){ render(); return; }
+
+  const { data:{ session } } = await _SUPA.auth.getSession();
+  if(!session){
+    const ov = document.getElementById('loginOverlay');
+    ov.style.display='flex';
+    return;
+  }
+  const { data } = await _SUPA.from('store').select('key,value').eq('user_id',session.user.id);
+  if(data?.length){
+    const m = Object.fromEntries(data.map(r=>[r.key,r.value]));
+    if(m.teas)    teas    = m.teas;
+    if(m.wares)   wares   = m.wares;
+    if(m.records) records = m.records;
+    try{
+      localStorage.setItem(STORE_T,JSON.stringify(teas));
+      localStorage.setItem(STORE_W,JSON.stringify(wares));
+      localStorage.setItem(STORE_R,JSON.stringify(records));
+    }catch(e){}
+  } else {
+    _syncCloud(); /* 首次登录：把本机现有数据上传到云端 */
+  }
+  render();
+})();
+
+async function doLogin(){
+  const email = document.getElementById('loginEmail').value.trim();
+  const pwd   = document.getElementById('loginPwd').value;
+  const errEl = document.getElementById('loginErr');
+  const btn   = document.getElementById('loginBtn');
+  errEl.style.display='none';
+  btn.disabled=true; btn.textContent='登录中…';
+  const { error } = await _SUPA.auth.signInWithPassword({ email, password:pwd });
+  if(error){
+    errEl.textContent = error.message==='Invalid login credentials'?'邮箱或密码错误':error.message;
+    errEl.style.display='block';
+    btn.disabled=false; btn.textContent='登录';
+    return;
+  }
+  document.getElementById('loginOverlay').style.display='none';
+  const { data:{ session } } = await _SUPA.auth.getSession();
+  const { data } = await _SUPA.from('store').select('key,value').eq('user_id',session.user.id);
+  if(data?.length){
+    const m = Object.fromEntries(data.map(r=>[r.key,r.value]));
+    if(m.teas)    teas    = m.teas;
+    if(m.wares)   wares   = m.wares;
+    if(m.records) records = m.records;
+    try{
+      localStorage.setItem(STORE_T,JSON.stringify(teas));
+      localStorage.setItem(STORE_W,JSON.stringify(wares));
+      localStorage.setItem(STORE_R,JSON.stringify(records));
+    }catch(e){}
+  } else {
+    await _syncCloud(); /* 首次登录：上传本机现有数据 */
+  }
+  render();
+}
+
+async function doSignup(){
+  const email = document.getElementById('loginEmail').value.trim();
+  const pwd   = document.getElementById('loginPwd').value;
+  const errEl = document.getElementById('loginErr');
+  errEl.style.display='none';
+  if(!email || pwd.length<6){
+    errEl.style.color='#b5462f';
+    errEl.textContent='请填写邮箱和至少 6 位密码';
+    errEl.style.display='block'; return;
+  }
+  const { error } = await _SUPA.auth.signUp({ email, password:pwd });
+  if(error){ errEl.style.color='#b5462f'; errEl.textContent=error.message; errEl.style.display='block'; return; }
+  errEl.style.color='#5b8c4a';
+  errEl.textContent='注册成功！请查收验证邮件，点击验证后即可登录。';
+  errEl.style.display='block';
+}
+
 /* 不注册 service worker：微信 WebView 的 SW 缓存会锁死旧页面、无法更新。
    改为纯网络加载，每次打开都是最新。防御性注销本源已存在的旧 SW。 */
 if ('serviceWorker' in navigator) {
