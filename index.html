@@ -2106,6 +2106,28 @@ function updateNeedCompleteBar(){
   const pending=(teas||[]).filter(t=>t&&t.needComplete);
   bar.style.display=pending.length?'flex':'none';
   if(pending.length)$('#ncText').textContent='有 '+pending.length+' 款从账本同步来的茶待完善（茶名/克数已带入，其余信息待补）';
+  checkJustAddedTea();
+}
+/* 刚从账本提交来的茶：弹窗提示并直接打开完善 */
+let _pendingTeaShown=false;
+function checkJustAddedTea(){
+  if(_pendingTeaShown)return;
+  let info=null;
+  try{info=JSON.parse(localStorage.getItem('tea_pending_complete')||'null');}catch(e){}
+  if(!info||!info.name)return;
+  const hit=(teas||[]).find(t=>(t.name||'').trim()===(info.name||'').trim());
+  if(!hit||!hit.needComplete)return;  // 云端还没同步到，等下次 render
+  _pendingTeaShown=true;
+  try{localStorage.removeItem('tea_pending_complete');}catch(e){}
+  wxModal('刚从账本提交','茶「'+escHtml(hit.name)+'」'+(info.grams?' · '+info.grams+'g':'')+'已加入茶室，但信息还不完整。\n\n现在补全它的年份 / 工艺 / 产区吧。',()=>openEditTea(hit.id),'去完善');
+}
+/* 简易确认弹窗（复用现有 modal 样式） */
+function wxModal(title,content,onOk,okText){
+  $('#modal').innerHTML='<div class="sh-h"><div class="sh-t">'+escHtml(title)+'</div><button class="x" onclick="closeMask()">×</button></div>'
+    +'<div style="font-size:14px;line-height:1.7;color:#5c5146;margin:12px 0 20px;white-space:pre-line">'+content+'</div>'
+    +'<div class="two-col"><button class="btn ghost" onclick="closeMask()">稍后再说</button><button class="btn" id="_wxOk">'+escHtml(okText||'确定')+'</button></div>';
+  $('#mask').classList.add('on');
+  const b=document.getElementById('_wxOk');if(b&&onOk)b.onclick=()=>{closeMask();onOk();};
 }
 function showNeedComplete(){
   const pending=(teas||[]).filter(t=>t&&t.needComplete);
