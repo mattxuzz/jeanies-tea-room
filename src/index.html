@@ -30,8 +30,8 @@
   header h1{margin:0;font-size:21px;font-weight:700;letter-spacing:3px}
   header .sub{font-size:12px;opacity:.88}
   /* 报头右侧：每日一语（节气 / 节日 / 小语），一行小字 */
-  .to-ledger{border:none;background:transparent;color:#fff;cursor:pointer;padding:6px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;opacity:.9;position:relative;z-index:1}
-  .to-ledger:hover{background:rgba(255,255,255,.15);opacity:1}
+  .to-ledger{border:none;background:rgba(255,255,255,.18);color:inherit;cursor:pointer;padding:7px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;z-index:1}
+  .to-ledger:hover{background:rgba(255,255,255,.3)}
   .to-ledger svg{width:22px;height:22px;display:block}
   .hseason{display:block;font-family:var(--serif);font-size:12px;color:rgba(255,255,255,.92);
     letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
@@ -348,6 +348,7 @@
     header::after{display:none}
     header h1{font-size:23px;letter-spacing:1px;color:var(--ink)}
     /* 每日一语：一行小字（浅底用浅灰，低干扰） */
+    .to-ledger{background:var(--chip);color:var(--tea);border:1px solid rgba(122,82,48,.18)}
     .hseason{display:block;font-family:var(--serif);font-size:11px;color:#A8A096;
       letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
       flex:1 1 auto;min-width:0;text-align:right}
