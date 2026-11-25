@@ -1,0 +1,3431 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>珍珠的茶室 · 茶叶与智能茶友</title>
+<style>
+  :root{
+    --bg:#f6f3ee; --card:#ffffff; --ink:#2b2620; --sub:#8a8175;
+    --line:#e7e0d6; --tea:#7a5230; --tea2:#a9763f; --green:#5b8c4a;
+    --red:#b5462f; --gold:#c8923a; --blue:#3a6ea5; --chip:#f0e9df;
+    --serif:"Songti SC","STSong","SimSun","Noto Serif SC",serif;
+    --shadow:0 1px 3px rgba(60,40,20,.08),0 6px 18px rgba(60,40,20,.06);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:
+      radial-gradient(1200px 500px at 80% -10%, rgba(168,118,63,.06), transparent 60%),
+      radial-gradient(900px 400px at 0% 100%, rgba(168,118,63,.05), transparent 55%),
+      var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif;
+    font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  /* 国风：标题用衬线，墨色点缀（已回撤艺术化改动，恢复简洁版） */
+  header{background:linear-gradient(120deg,#7a5230,#a9763f);color:#fff;padding:18px 22px;
+    display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;
+    position:relative;overflow:hidden}
+  header::after{content:"茶";position:absolute;right:-4px;top:-14px;font-family:var(--serif);
+    font-size:92px;font-weight:700;color:rgba(255,255,255,.10);pointer-events:none;line-height:1}
+  header h1, .modal h3, .tea h3, .tcard h3, .calhead .ttl{font-family:var(--serif)}
+  header h1{margin:0;font-size:21px;font-weight:700;letter-spacing:3px}
+  header .sub{font-size:12px;opacity:.88}
+  /* 报头右侧：每日一语（节气 / 节日 / 小语），一行小字 */
+  .hseason{display:block;font-family:var(--serif);font-size:12px;color:rgba(255,255,255,.92);
+    letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    flex:1 1 auto;min-width:0;text-align:right}
+  nav{display:flex;gap:6px;flex-wrap:wrap;margin:14px 18px 0}
+  nav button{background:var(--card);border:1px solid var(--line);color:var(--sub);
+    padding:8px 14px;border-radius:20px;cursor:pointer;font-size:13px;transition:.15s}
+  nav button.on{background:var(--tea);color:#fff;border-color:var(--tea);font-weight:600}
+  nav button.navicon{padding:7px 10px;display:inline-flex;align-items:center;justify-content:center;margin-left:auto}
+  nav button.navicon svg{width:18px;height:18px;display:block}
+  nav button.navicon.on{background:var(--tea);color:#fff;border-color:var(--tea)}
+  .wrap{max-width:1080px;margin:0 auto;padding:16px 18px 60px}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0 14px}
+  /* 喝茶日历 */
+  .calhead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:6px 0 12px;flex-wrap:wrap}
+  .calhead .ttl{font-size:17px;font-weight:700;color:var(--ink)}
+  .calhead .nav{display:flex;gap:8px;align-items:center}
+  .calhead .nav button{padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:var(--card);
+    cursor:pointer;color:var(--tea);font-size:14px}
+  .calhead .nav button:hover{background:var(--tea);color:#fff;border-color:var(--tea)}
+  .calweek{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-bottom:6px}
+  .calweek span{text-align:center;font-size:12px;color:var(--sub);padding:4px 0}
+  .calgrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+  .calcell{background:var(--card);border:1px solid var(--line);border-radius:10px;min-height:84px;min-width:0;
+    padding:6px;font-size:12px;position:relative;display:flex;flex-direction:column;gap:3px}
+  .calcell.blank{background:transparent;border:none}
+  .calcell.today{border-color:var(--tea);box-shadow:0 0 0 1px var(--tea) inset}
+  .calcell .dn{font-size:12px;color:var(--sub);font-weight:600}
+  .calcell.today .dn{color:var(--tea)}
+  .calcell .add{position:absolute;top:4px;right:4px;width:20px;height:20px;border:none;border-radius:6px;
+    background:var(--chip);color:var(--tea);cursor:pointer;font-size:14px;line-height:1;display:none}
+  .calcell:hover .add{display:block}
+  .calev{background:#f3efe8;border-radius:6px;padding:3px 6px;cursor:pointer;line-height:1.35;overflow:hidden}
+  .calev:hover{background:#ece4d8}
+  .calev .et{font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .calev .es{font-size:10px;color:var(--sub)}
+  .calev .estar{color:#d99a2b}
+  /* 日历：月份切换与「记今天」（季节小元素默认仅手机端显示） */
+  .calhead .nav .addtoday{background:var(--tea);color:#fff;border:none;
+    padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
+  .calhead .nav .ym{font-weight:600;min-width:96px;text-align:center}
+  .seastip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:500;color:var(--sub)}
+  .si{display:inline-flex;width:13px;height:13px;flex:0 0 auto}
+  .si svg{width:13px;height:13px;display:block}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:10px;
+    padding:9px 8px;box-shadow:var(--shadow);text-align:center;overflow:hidden}
+  .stat .n{font-size:18px;font-weight:700;color:var(--tea);line-height:1.25;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .stat .l{font-size:11px;color:var(--sub);margin-top:1px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .classtabs{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 4px}
+  .classtabs button{background:var(--chip);border:1px solid var(--line);color:var(--sub);
+    padding:7px 16px;border-radius:20px;font-size:14px;cursor:pointer;transition:.15s}
+  .classtabs button.on{background:var(--tea);color:#fff;border-color:var(--tea);font-weight:600}
+  .classtabs .ctsep{flex:0 0 auto;width:1px;align-self:stretch;background:var(--line);margin:4px 6px}
+  .classtabs button.other{border-style:dashed}
+  .classtabs button.other.on{background:var(--tea2);border-color:var(--tea2)}
+  .classtabs .ctools{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .hint{background:var(--chip);border:1px solid var(--line);border-radius:10px;padding:10px 14px;
+    font-size:13px;color:var(--sub);line-height:1.8;margin-bottom:14px}
+  .hint b{color:var(--ink)}
+  .hint .ht{display:inline-block;background:#fff;border:1px solid var(--tea);color:var(--tea);
+    border-radius:6px;padding:0 7px;margin:0 2px;font-weight:600}
+  .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:10px 0 14px}
+  .toolbar input,.toolbar select{padding:8px 10px;border:1px solid var(--line);border-radius:8px;
+    background:#fff;font-size:13px;color:var(--ink)}
+  .toolbar input{flex:1;min-width:160px}
+  .btn{background:var(--tea);color:#fff;border:none;padding:8px 16px;border-radius:8px;
+    cursor:pointer;font-size:13px;font-weight:600}
+  .btn.ghost{background:#fff;color:var(--tea);border:1px solid var(--tea)}
+  .btn.sm{padding:5px 10px;font-size:12px;border-radius:6px}
+  .btn.danger{background:#fff;color:var(--red);border:1px solid var(--red)}
+  .subtabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+  .subtabs button{background:var(--chip);border:none;color:var(--sub);padding:5px 12px;
+    border-radius:16px;cursor:pointer;font-size:12px}
+  .subtabs button.on{background:var(--tea2);color:#fff;font-weight:600}
+  .filterrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 14px}
+  /* 排序图标 */
+  .icsel{display:inline-flex;align-items:center;gap:6px;background:var(--chip);border:1px solid var(--line);
+    border-radius:999px;padding:6px 14px 6px 12px;color:var(--sub);font-size:13px}
+  .icsel svg{width:15px;height:15px;opacity:.65;flex:0 0 auto}
+  .icsel select{appearance:none;-webkit-appearance:none;border:none;background:transparent;color:var(--ink);
+    font-size:13px;font-weight:600;cursor:pointer;outline:none;padding-right:18px;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%239A4A28' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right center}
+  .icsel select option{color:#222}
+  .btn svg{width:16px;height:16px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr));gap:14px}
+  .mspendwrap{margin:14px 0 6px}
+  .mspendwrap h4{margin:0 0 8px;font-size:14px;color:var(--ink);font-weight:700}
+  .mgrd{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
+  .mspend{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+  .mspend .my{font-weight:700;color:var(--tea);font-size:14px;margin-bottom:6px}
+  .mspend .m2{display:flex;justify-content:space-between;font-size:13px;color:var(--sub);margin:2px 0}
+  .mspend .m2 b{color:var(--ink)}
+  .tea{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;
+    box-shadow:var(--shadow);min-width:0;position:relative}
+  .tea.removing{opacity:0;transform:scale(.97);transition:opacity .2s,transform .2s}
+  /* 标题区：h3 自然换行（最多 2 行省略） + 操作按钮绝对定位到右上角——避免长标题挤掉收藏/编辑按钮 */
+  .tea .thead{display:block;margin-bottom:7px;padding-right:128px;min-height:34px}
+  .tea .thead h3{margin:0;font-size:16px;font-weight:700;line-height:1.35;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
+  .tea .tea-acts{position:absolute;top:14px;right:14px;display:flex;gap:2px;align-items:center}
+  .clsbadge{font-size:11px;font-weight:600;color:var(--tea);background:#f7efe7;
+    padding:2px 9px;border-radius:10px;white-space:nowrap;flex:0 0 auto}
+  .tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+  .tag{font-size:11px;padding:2px 8px;border-radius:10px;background:var(--chip);color:var(--sub)}
+  .tag.cls{background:#efe6da;color:var(--tea);font-weight:600}
+  .tag.var{background:#eef3ea;color:var(--green)}
+  .tag.brand{background:#eef0f5;color:#5a6b8c}
+  .tag.sample{background:#fbeede;color:#c47a1e;font-weight:600}
+  .meta{font-size:12px;color:var(--sub);display:flex;flex-wrap:wrap;gap:10px;margin-bottom:8px}
+  .tea .info{font-size:12px;color:var(--sub);margin-bottom:5px;letter-spacing:.3px}
+  .subchips{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 4px}
+  .bar{height:7px;background:#eee4d8;border-radius:4px;overflow:hidden;margin:6px 0}
+  .bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--tea2),var(--tea))}
+  .bar.low>i{background:linear-gradient(90deg,#d98b3a,#b5462f)}
+  .row{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px}
+  .price{font-size:12px;color:var(--sub)}
+  .price b{color:var(--ink);font-size:14px}
+  .acts{display:flex;gap:10px;justify-content:flex-end;align-items:center}
+  /* 茶样选择 */
+  .tea .pick{position:absolute;top:12px;left:12px;z-index:2}
+  /* 加心按钮：与茶名、茶类徽章同处一行右侧（不再绝对定位） */
+  .favbtn{width:30px;height:30px;border:none;border-radius:8px;
+    display:inline-flex;align-items:center;justify-content:center;cursor:pointer;background:transparent;color:var(--sub);
+    padding:0;transition:.15s;flex:0 0 auto}
+  .favbtn svg{width:17px;height:17px}
+  .favbtn:hover{background:#e7dccd;color:var(--red)}
+  .favbtn.faved{background:transparent;color:var(--red)}
+  .favbtn.faved:hover{background:#f3e0db}
+  .tea .pick input{width:18px;height:18px;cursor:pointer;accent-color:var(--tea)}
+  .samplehead{font-size:13px;color:var(--tea);font-weight:600;margin:4px 0 8px;
+    background:#fbeede;border-radius:8px;padding:8px 10px}
+  .batchbar{display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap;
+    background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 12px}
+  .batchbar .allpick{font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer}
+  .batchbar .allpick input{width:16px;height:16px;cursor:pointer;accent-color:var(--tea)}
+  .btn.on{background:var(--tea);color:#fff;border-color:var(--tea);font-weight:600}
+  .iconbtn{width:30px;height:30px;border:none;border-radius:8px;display:inline-flex;
+    align-items:center;justify-content:center;cursor:pointer;background:var(--chip);
+    color:var(--sub);padding:0;transition:.15s}
+  .iconbtn svg{width:16px;height:16px}
+  .iconbtn:hover{background:#e7dccd;color:var(--tea)}
+  .iconbtn.primary{background:var(--tea);color:#fff}
+  .iconbtn.primary:hover{background:var(--tea2)}
+  .iconbtn.danger:hover{background:#f6dcd6;color:#b5462f}
+  /* 加心（收藏）：心形颜色已直接写死在 SVG 里（灰描边空心 / 红实心），不依赖 CSS 变量/currentColor，
+     兼容安卓微信 WebView 对 var(--sub)/stroke 解析不稳导致空心心不可见的问题 */
+  .iconbtn.fav{color:var(--sub)}
+  .iconbtn.fav.faved{background:transparent}
+  .iconbtn.fav.faved:hover{background:#f3e0db}
+  /* 卡片右上角图标操作组：绝对定位到右上角，与标题区位置解耦，长标题也不会挤掉按钮 */
+  .tea-acts{position:absolute;top:14px;right:14px;display:flex;gap:2px;align-items:center;z-index:1}
+  .tea .tea-acts .iconbtn{width:27px;height:27px;border-radius:7px;background:transparent}
+  .tea .tea-acts .iconbtn svg{width:15px;height:15px}
+  .tea .tea-acts .iconbtn:hover{background:var(--chip)}
+  .tea .tea-acts .iconbtn.primary{background:var(--tea);color:#fff}
+  .tea .tea-acts .iconbtn.primary:hover{background:var(--tea2)}
+  /* 添加茶叶：一片茶叶 + 加号 */
+  .btn.addtea{display:inline-flex;align-items:center;gap:3px;padding:8px 12px}
+  .btn.addtea svg{width:16px;height:16px}
+  .btn.addtea .plus{font-size:16px;font-weight:700;line-height:1}
+  .empty{text-align:center;color:var(--sub);padding:40px;background:var(--card);
+    border:1px dashed var(--line);border-radius:14px}
+  /* 品鉴记录 */
+  .bigstat{display:flex;gap:14px;flex-wrap:wrap;margin:6px 0 16px}
+  .bigstat .bs{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 16px;box-shadow:var(--shadow)}
+  .bigstat .bs .n{font-size:20px;font-weight:700;color:var(--tea)}
+  .bigstat .bs .l{font-size:12px;color:var(--sub)}
+  .tlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;margin-top:8px}
+  .tcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:var(--shadow)}
+  .tcard{padding:12px 14px}
+  .tcard .thead{display:flex;align-items:center;gap:8px;margin-bottom:3px}
+  .tcard .thead h3{margin:0;font-size:15px;flex:1;min-width:0;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .tcard .tm{font-size:12px;color:var(--sub);margin-bottom:0}
+  .tmood{font-size:17px;line-height:1;flex:0 0 auto}
+  .timp{font-size:13px;color:#4a4238;margin-top:3px;line-height:1.5}
+  .tdel{width:28px;height:28px;border:none;background:transparent;color:var(--sub);
+    display:inline-flex;align-items:center;justify-content:center;cursor:pointer;
+    border-radius:8px;padding:0;flex:0 0 auto;transition:.15s}
+  .tdel svg{width:15px;height:15px}
+  .tdel:hover{color:var(--red);background:var(--chip)}
+  /* 心情表情选择：替代星星评分 */
+  .moods{display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 4px}
+  .mood{font-size:22px;line-height:1;min-width:42px;height:40px;border:1px solid var(--line);
+    border-radius:10px;background:var(--card);cursor:pointer;transition:transform .12s,background .15s;
+    display:inline-flex;align-items:center;justify-content:center;padding:0;
+    filter:grayscale(1);opacity:.5}
+  .mood.on{border-color:var(--tea);background:#f7efe7;filter:none;opacity:1;transform:scale(1.06)}
+  .mood:active{transform:scale(.94)}
+  /* 选茶搜索候选列表（替代 datalist，手机端更好点） */
+  .teapick{display:none;margin:-2px 0 4px;max-height:190px;overflow-y:auto;
+    border:1px solid var(--line);border-radius:10px;background:var(--card);
+    box-shadow:0 4px 14px rgba(80,60,40,.08);
+    -webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+  .tprow{display:flex;align-items:center;gap:8px;padding:9px 11px;cursor:pointer;
+    border-bottom:0.5px solid var(--line);font-size:13px}
+  .tprow:last-child{border-bottom:none}
+  .tprow:active{background:#f7f2ea}
+  .tprow b{font-weight:600;color:var(--ink);flex:1;min-width:0;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .tprow span{font-size:11px;color:var(--sub);flex:0 0 auto}
+  .tpempty{padding:10px 11px;font-size:12px;color:var(--sub)}
+  .tprow.on{background:#f3e9dd}
+  .tprow.on b{color:var(--tea)}
+  /* 茶具/选茶 触发器：外观贴近输入框，点击展开紧凑列表 */
+  .pickbtn{width:100%;text-align:left;font:inherit;font-size:14px;color:var(--ink);cursor:pointer;
+    background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;
+    display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .pickbtn:empty:before{content:attr(data-ph)}
+  .pickbtn::after{content:'▾';color:var(--sub);font-size:12px;flex:0 0 auto}
+  .pickbtn:active{background:#f7f2ea}
+  /* ware */
+  .wgroup{margin:16px 0}
+  .wgroup h4{margin:0 0 10px;font-size:15px;border-left:3px solid var(--tea);padding-left:8px}
+  .wgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+  .ware{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;box-shadow:var(--shadow);cursor:pointer;position:relative}
+  .ware::after{content:'›';position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--sub);font-size:18px;opacity:.4;pointer-events:none}
+  .ware .wt{padding-right:16px}
+  .ware .wt{font-weight:700;font-size:14px}
+  .ware .wm{font-size:12px;color:var(--sub);margin:4px 0}
+  .ware .rec{font-size:12px;background:#f3efe8;border-radius:8px;padding:6px 8px;margin-top:6px;color:var(--tea)}
+  /* picker */
+  .formrow{margin:12px 0}
+  .formrow label{display:block;font-size:13px;color:var(--sub);margin-bottom:6px}
+  .opts{display:flex;gap:8px;flex-wrap:wrap}
+  .opts button{background:var(--chip);border:none;padding:7px 14px;border-radius:18px;cursor:pointer;font-size:13px;color:var(--sub)}
+  .opts button.on{background:var(--tea);color:#fff;font-weight:600}
+  /* 品牌点选 / 泡袋提示 */
+  .brandchips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+  .chip{font-size:12px;padding:3px 10px;border-radius:14px;background:var(--chip);color:var(--sub);
+    cursor:pointer;border:1px solid var(--line);transition:.15s}
+  .chip:hover{background:var(--tea);color:#fff;border-color:var(--tea)}
+  .bagcalc{font-size:12px;color:var(--tea);background:#fbeede;border-radius:8px;padding:6px 10px;margin-top:8px}
+  .picks{margin-top:18px;display:grid;gap:14px}
+  .pick{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:var(--shadow)}
+  .pick .ph{display:flex;justify-content:space-between;align-items:baseline}
+  .pick h3{margin:0;font-size:17px}
+  .pick .score{font-size:12px;color:var(--gold);font-weight:700}
+  .pinfo{display:grid;grid-template-columns:repeat(2,1fr);gap:8px 16px;margin-top:10px;font-size:13px}
+  .pinfo div span{color:var(--sub);font-size:12px;display:block}
+  .pinfo b{font-weight:600}
+  .brew{margin-top:10px;font-size:13px;background:#f7f3ec;border-radius:8px;padding:8px 10px;color:#5a4a36}
+  /* chat */
+  .chat{background:var(--card);border:1px solid var(--line);border-radius:14px;
+    height:460px;display:flex;flex-direction:column;box-shadow:var(--shadow);overflow:hidden}
+  .chat .msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+  .bub{max-width:82%;padding:9px 13px;border-radius:14px;font-size:13px;line-height:1.6;white-space:pre-wrap}
+  .bub.bot{background:#f1ece4;align-self:flex-start;border-bottom-left-radius:4px}
+  .bub.me{background:var(--tea);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+  .bub .cbtn{display:inline-block;margin:4px 6px 0 0;background:#fff;border:1px solid var(--tea);
+    color:var(--tea);border-radius:14px;padding:4px 12px;font-size:12px;cursor:pointer}
+  .bub .cbtn:hover{background:var(--tea);color:#fff}
+  .chat .input{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line);background:#faf7f2}
+  .chat .input input{flex:1;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px}
+  .foot{margin-top:30px;display:flex;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--sub)}
+  .foot .ver{width:100%;color:#b9ad9f;font-size:11px;margin-top:2px}
+  /* modal */
+  .mask{position:fixed;inset:0;background:rgba(40,30,20,.45);display:none;align-items:center;
+    justify-content:center;z-index:50;padding:18px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .mask.on{display:flex}
+  .modal{background:#fff;border-radius:16px;width:100%;max-width:440px;padding:20px 20px 0;
+    box-shadow:var(--shadow);border-top:3px solid var(--gold);
+    max-height:90vh;max-height:90dvh;overflow-y:auto;
+    -webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+  .modal h3{margin:0 0 14px;font-size:17px}
+  .modal label{display:block;font-size:12px;color:var(--sub);margin:10px 0 4px}
+  .modal input,.modal select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font-size:13px}
+  .modal .ro{background:#f3efe8;border:1px solid var(--line);border-radius:8px;padding:9px 10px;color:var(--ink);font-weight:600}
+  .modal .hint{font-size:12px;color:var(--sub);margin-top:8px;background:#f7f3ec;border-radius:8px;padding:8px 10px}
+  .modal .mrow{display:flex;gap:10px}
+  .modal .mrow>div{flex:1;min-width:0}
+  .modal .acts{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+  .buytitle{font-size:13px;color:var(--sub);margin:10px 0 6px;font-weight:600}
+  .buylegend{display:flex;gap:8px;font-size:11px;color:var(--sub);margin-bottom:4px;padding:0 2px}
+  .buylegend .lm{flex:0 0 116px;text-align:center}
+  .buylegend .lk{flex:1;text-align:center}
+  .buylegend .lp{flex:0 0 96px;text-align:center}
+  .buyrow{display:flex;gap:8px;align-items:center;margin-bottom:6px;flex-wrap:nowrap}
+  .buyrow .bm{flex:0 0 116px;width:116px;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font-size:14px}
+  .buyrow .bper{width:54px;padding:8px 4px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font-size:13px;text-align:center}
+  .buyrow .bx{color:var(--sub);font-size:13px;flex:0 0 auto}
+  .buyrow .bn{width:46px;padding:8px 4px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font-size:13px;text-align:center}
+  .buyrow .bgres{font-size:12px;color:var(--tea);white-space:nowrap;font-weight:600;flex:0 0 auto}
+  .buyrow .bp{flex:0 0 96px;min-width:0;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font-size:14px}
+  .buyrow .bdel{flex:0 0 auto;width:30px;height:30px;border:none;border-radius:8px;background:transparent;color:var(--sub);font-size:18px;cursor:pointer}
+  .buyrow .bdel:hover{background:#f3e6df;color:var(--gold)}
+  .bmod{display:flex;flex-direction:row;align-items:center;gap:6px;flex:1;min-width:0}
+  .del-fab{float:right;margin:2px 8px 0 0;border:none;background:transparent;color:var(--red);font-size:13px;cursor:pointer;padding:3px 8px;border-radius:6px}
+  .del-fab:hover{background:#fdecec}
+  .bmodes{display:inline-flex;gap:4px;flex:0 0 auto}
+  .bmodes button{background:var(--chip);border:1px solid var(--line);border-radius:14px;padding:2px 8px;font-size:11px;color:var(--sub);cursor:pointer;line-height:1.4}
+  .bmodes button.on{background:var(--tea);color:#fff;border-color:var(--tea);font-weight:600}
+  .bin{display:flex;align-items:center;gap:4px;min-width:0}
+  .bin .bg{flex:1;min-width:0;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font-size:13px}
+  .msd{margin-top:10px;font-size:12px;color:var(--sub);line-height:1.5}
+  .msd b{color:var(--ink);font-size:12px;display:block;margin-bottom:3px}
+  .msd ul{margin:0;padding-left:16px}
+  .msd li{margin:2px 0}
+  .x{float:right;cursor:pointer;color:var(--sub);font-size:20px;line-height:1}
+  /* ===== 手机优先：简约高级（纸白 + 茶汤色 + 发丝线） ===== */
+  @media(max-width:680px){
+    :root{
+      --bg:#FBF8F3; --card:#FFFFFF; --ink:#231F1B; --sub:#6E655B;
+      --line:rgba(35,31,27,.12); --tea:#9A4A28; --tea2:#B8633A;
+      --chip:#F5F0E8; --shadow:none; --red:#B0402A;
+    }
+    body{background:var(--bg)}
+    /* 顶栏：去掉色块与水印，与导航合成一个报头块（只保留导航下方一条线） */
+    header{background:var(--bg);color:var(--ink);padding:20px 16px 12px;border-bottom:none;
+      align-items:baseline;justify-content:space-between;gap:12px}
+    header::after{display:none}
+    header h1{font-size:23px;letter-spacing:1px;color:var(--ink)}
+    /* 每日一语：一行小字（浅底用浅灰，低干扰） */
+    .hseason{display:block;font-family:var(--serif);font-size:11px;color:#A8A096;
+      letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+      flex:1 1 auto;min-width:0;text-align:right}
+    .seastip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:500;
+      background:var(--card);border:0.5px solid var(--line);border-radius:20px;padding:3px 10px}
+    /* 日历：与全站统一的发丝线语言 */
+    .calhead{margin:2px 0 12px;gap:8px;align-items:center}
+    .calhead .ttl{font-family:var(--serif);font-size:15px}
+    .calhead .emo{display:none}
+    .calhead .nav{width:100%;justify-content:space-between;gap:8px}
+    .calhead .nav button{padding:6px 10px;border-radius:8px}
+    .calhead .nav .btxt{display:none}
+    .calhead .nav .ym{font-family:var(--serif);font-size:15px;font-weight:600;min-width:0;
+      white-space:nowrap;color:var(--ink)}
+    .calgrid,.calweek{gap:5px}
+    .calweek span{font-size:11px;color:var(--sub);padding:2px 0}
+    .calcell{background:var(--card);border:0.5px solid var(--line);border-radius:8px;
+      min-height:62px;padding:5px;gap:2px;box-shadow:none}
+    .calcell.today{border-color:var(--tea);box-shadow:none}
+    .calcell .dn{font-family:var(--serif);font-size:11px;color:var(--sub)}
+    .calcell.today .dn{color:var(--tea);font-weight:700}
+    /* 手机端整格即可点开记录，隐藏"+"，避免每格一个加号显得杂乱 */
+    .calcell .add{display:none}
+    .calev{background:var(--chip);border-radius:5px;padding:2px 5px}
+    .calev .et{font-weight:500;font-size:11px}
+    .calev .es{font-size:10px}
+    .buyrow{flex-wrap:wrap;gap:6px}
+    .buyrow .bm{flex:1 1 130px}
+    .buyrow .bmod{flex:1 1 100%}
+    .buyrow .bp{flex:1 1 70px}
+    .mspendwrap{margin:14px 0 34px}
+    .pinfo{grid-template-columns:1fr}
+    /* 导航：下划线指示，取代胶囊 */
+    nav{gap:0;margin:0;padding:0 16px;background:transparent;border-bottom:0.5px solid var(--line);
+      flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+    nav::-webkit-scrollbar{display:none}
+    nav button{background:transparent;border:none;border-radius:0;padding:11px 0;margin-right:22px;
+      font-size:14px;color:var(--sub);position:relative;white-space:nowrap}
+    nav button.on{background:transparent;color:var(--ink);font-weight:600}
+    nav button.on::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;
+      background:var(--tea);border-radius:2px}
+    nav button.navicon{margin-left:auto;margin-right:0;padding:8px 0 8px 12px}
+    nav button.navicon svg{width:20px;height:20px}
+    nav button.navicon.on{background:transparent;color:var(--tea);border-color:transparent}
+    nav button.navicon.on::after{display:none}
+    .wrap{padding:14px 14px 70px}
+    /* 总览：一条细线四格 */
+    .stats{grid-template-columns:repeat(4,1fr);gap:0;margin:14px 0 14px;background:var(--card);
+      border:0.5px solid var(--line);border-radius:10px;overflow:hidden}
+    .stat{border:none;border-radius:0;box-shadow:none;padding:10px 4px;background:transparent}
+    .stat+.stat{border-left:0.5px solid var(--line)}
+    .stat .n{font-family:var(--serif);font-size:17px;color:var(--ink)}
+    .stat .l{font-size:11px;color:var(--sub)}
+    /* 筛选框：宽度减半，与右侧按钮同一行 */
+    .toolbar{flex-wrap:nowrap;gap:8px;margin:0 0 12px}
+    .toolbar input{flex:1 1 0;min-width:0}
+    .toolbar .btn{padding:8px 12px}
+    .toolbar .btn:first-of-type{margin-left:auto}
+    /* 分类 / 小类：轻量化 */
+    .classtabs{gap:6px;margin:0 0 10px}
+    .classtabs button{background:var(--card);border:0.5px solid var(--line);color:var(--sub);
+      padding:6px 12px;border-radius:9px;font-size:13px}
+    .classtabs button.on{background:var(--tea);color:#fff;border-color:var(--tea)}
+    .classtabs .ctsep{display:none}
+    .classtabs .ctools{margin-left:0;gap:6px}
+    .subtabs{gap:6px;margin-bottom:12px}
+    .subtabs button{background:var(--card);border:0.5px solid var(--line);
+      padding:6px 12px;border-radius:9px;font-size:13px}
+    /* 卡片：发丝边框、无投影 */
+    .tea,.tcard,.ware,.pick,.bigstat .bs,.empty{background:var(--card);
+      border:0.5px solid var(--line);border-radius:12px;box-shadow:none}
+    .tea{padding:13px 14px}
+    .tea .thead{margin-bottom:6px}
+    .tea .thead h3{font-family:var(--serif);font-size:15px}
+    .tag{background:var(--chip);border-radius:6px;padding:2px 7px}
+    .tag.cls{background:#F7EFE7;color:var(--tea)}
+    .tag.var{background:#EFF2EC;color:#4A6B4F}
+    .bar{height:3px;background:#F0EAE1}
+    .bar>i{background:var(--tea)}
+    .bar.low>i{background:var(--red)}
+    .grid{grid-template-columns:minmax(0,1fr);gap:10px}
+    .tlist{grid-template-columns:1fr;gap:10px}
+    .wgrid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+    /* 弹窗：真正的底部抽屉 —— 全宽贴底、可上下滚动、操作按钮吸底常驻 */
+    .mask{align-items:flex-end;padding:0}
+    .modal{max-width:100%;width:100%;border-radius:16px 16px 0 0;
+      max-height:88vh;max-height:92dvh;margin-top:auto;overflow-y:auto;
+      -webkit-overflow-scrolling:touch;overscroll-behavior:contain;
+      padding:24px 16px 0}
+    .modal h3{font-size:16px}
+    .buyrow{flex-wrap:wrap;gap:6px}
+    .buyrow .bm{flex:1 1 100%}
+    .buyrow .bmod{flex:1 1 100%}
+    .buyrow .bp{flex:1 1 40%}
+    .buyrow .bdel{flex:0 0 auto}
+    .foot{font-size:11px}
+  }
+  /* —— 移动端增强：吸顶导航 / 悬浮添加 / 大点击区 / 抽屉动效 / 焦点态 —— */
+  .fab{display:none}
+  @media(max-width:680px){
+    nav{position:sticky;top:0;z-index:40;background:rgba(251,248,243,.88);
+      -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+    .toolbar input:focus,.modal input:focus,.modal select:focus,
+      .buyrow .bm:focus,.buyrow .bp:focus{outline:none;border-color:var(--tea);
+      box-shadow:0 0 0 3px rgba(154,74,40,.16)}
+    .btn.addtea{display:none}
+    .fab{display:inline-flex;position:fixed;right:16px;
+      bottom:18px;bottom:calc(18px + env(safe-area-inset-bottom));width:54px;height:54px;border-radius:50%;
+      background:linear-gradient(135deg,var(--tea2),var(--tea));color:#fff;border:none;
+      align-items:center;justify-content:center;cursor:pointer;z-index:45;
+      box-shadow:0 8px 20px rgba(154,74,40,.42);transition:transform .12s}
+    .fab svg{width:23px;height:23px}
+    .fab-plus{position:absolute;top:4px;right:9px;font-size:15px;font-weight:700;line-height:1}
+    .fab:active{transform:scale(.92)}
+    .wrap{padding-bottom:96px}
+    .iconbtn{width:40px;height:40px}
+    .iconbtn svg{width:19px;height:19px}
+    .tea .tea-acts .iconbtn{width:32px;height:32px}
+    .tea .tea-acts .iconbtn svg{width:16px;height:16px}
+    .acts{gap:12px}
+    .favbtn{width:36px;height:36px}
+    .favbtn svg{width:19px;height:19px}
+    .modal{position:relative}
+    /* 底部操作条吸底：内容再长，取消/保存也始终可见可点 */
+    /* 不使用 env() 的回退值写在前面：老浏览器解析不了 env() 时仍能保留内边距 */
+    .modal .acts{position:sticky;bottom:0;z-index:3;background:#fff;
+      margin:14px -16px 0;padding:12px 16px 14px;
+      padding:12px 16px calc(14px + env(safe-area-inset-bottom));
+      border-top:0.5px solid var(--line)}
+    .modal::before{content:"";position:absolute;top:8px;left:50%;transform:translateX(-50%);
+      width:38px;height:4px;border-radius:2px;background:var(--line);z-index:1}
+    .mask.on .modal{animation:sheetUp .26s cubic-bezier(.22,.61,.36,1)}
+    @keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+    .tea:active,.tcard:active,.ware:active,.calcell:active{background:#fbf8f3}
+    .iconbtn,.btn,.chip,.favbtn,.classtabs button,.subtabs button,.tag{
+      cursor:pointer;-webkit-tap-highlight-color:transparent}
+    .iconbtn:active,.btn:active,.chip:active,.favbtn:active,
+      .classtabs button:active,.subtabs button:active{transform:scale(.94);transition:transform .1s}
+    .x{font-size:24px;padding:4px 8px;margin:-4px -4px 0 0}
+  }
+/* 待完善提示条（来自家庭小账本同步的茶） */
+.need-complete-bar{max-width:640px;margin:12px auto 0;padding:12px 16px;background:linear-gradient(135deg,#FFF3E8,#FFE9D6);border:1px solid #F5DCB8;border-radius:12px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px;color:#9A6B32}
+.need-complete-bar button{border:none;border-radius:9px;padding:7px 14px;background:#C8873C;color:#fff;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+.nc-list{max-height:52vh;overflow:auto;margin-top:12px}
+.nc-item{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:10px;background:#FAF5F1;margin-bottom:8px;font-size:14px;font-weight:600;cursor:pointer}
+.nc-item span{font-size:12px;color:#C8873C;font-weight:700}
+</style>
+<meta name="theme-color" content="#7A5230">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="珍珠的茶室">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192-v12.png">
+<link rel="apple-touch-icon" href="apple-touch-v12.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+<header>
+  <h1>珍珠的茶室</h1>
+  <span class="hseason" id="hSeason"></span>
+</header>
+
+<nav id="nav">
+  <button data-v="stock" class="on">茶叶</button>
+  <button data-v="wares">茶具</button>
+  <!-- 「问茶」暂时下架（功能代码保留，想好玩法后随时恢复入口） --><button data-v="pick" style="display:none">问茶</button>
+  <button data-v="tasting">品鉴记录</button>
+  <button data-v="calendar" class="navicon" title="喝茶日记"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg></button>
+</nav>
+
+<div id="needCompleteBar" class="need-complete-bar" style="display:none">
+  <span id="ncText"></span>
+  <button onclick="showNeedComplete()">去完善</button>
+</div>
+
+
+<div class="wrap" id="app"></div>
+<button class="fab" onclick="openAddTea()" aria-label="添加茶叶" title="添加茶叶">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6"/></svg>
+  <span class="fab-plus">+</span>
+</button>
+
+<div class="foot">
+  <span>数据只存在「当前这个 App」里（微信 / 浏览器 / 桌面各自独立）。想把微信里录的数据带到其他设备：点「备份与同步」，生成链接或备份码发过去即可。</span>
+  <button class="btn ghost sm" onclick="openSync()">备份与同步</button>
+  <button class="btn ghost sm" onclick="resetData()">恢复初始数据</button>
+  <input type="file" id="fileInput" accept="application/json" style="display:none" onchange="doImport(event)">
+  <div class="ver">版本 v20261116 · 品鉴搜索 / 价格可选是否计入花费</div>
+</div>
+
+<!-- 登录遮罩 -->
+<div id="loginOverlay" style="display:none;position:fixed;inset:0;background:rgba(43,38,32,.72);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;padding:32px 28px;width:min(360px,90vw);box-shadow:0 8px 32px rgba(60,40,20,.18);">
+    <h2 style="font-family:'Songti SC','STSong',serif;color:#7a5230;margin:0 0 6px;font-size:20px;letter-spacing:2px;">珍珠的茶室</h2>
+    <p style="color:#8a8175;font-size:13px;margin:0 0 20px;">登录后数据自动在所有设备同步</p>
+    <input id="loginEmail" type="email" placeholder="邮箱" autocomplete="email"
+      style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid #e7e0d6;border-radius:8px;font-size:14px;margin-bottom:10px;outline:none;color:#2b2620;">
+    <input id="loginPwd" type="password" placeholder="密码（至少 6 位）" autocomplete="current-password"
+      style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid #e7e0d6;border-radius:8px;font-size:14px;margin-bottom:16px;outline:none;color:#2b2620;">
+    <div id="loginErr" style="display:none;font-size:13px;margin-bottom:12px;padding:8px 12px;border-radius:8px;background:#fdf0ee;color:#b5462f;"></div>
+    <button id="loginBtn" onclick="doLogin()"
+      style="width:100%;padding:11px;background:#7a5230;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:10px;">登录</button>
+    <button onclick="doSignup()"
+      style="width:100%;padding:11px;background:transparent;color:#7a5230;border:1px solid #7a5230;border-radius:8px;font-size:14px;cursor:pointer;">首次使用 → 注册账号</button>
+  </div>
+</div>
+<!-- 喝一泡 / 编辑 弹窗 -->
+<div class="mask" id="mask"><div class="modal" id="modal"></div></div>
+
+<script>
+/* ============ Supabase ============ */
+/* anon/publishable key 设计为可公开：RLS 策略限制只有已登录用户才能读写自己的数据 */
+const _SUPA = window.supabase.createClient(
+  'https://wrcxyprfgsowvmxomrju.supabase.co',
+  'sb_publishable_KO-nXbLuNiphNyU5pvm4aw_quJkMdNN'
+);
+/* ============ 数据 ============ */
+const SEED = {
+ "teas": [
+  {
+   "id": "t0",
+   "class": "青茶",
+   "sub": "武夷岩茶",
+   "variety": "拼配大红袍",
+   "name": "清荷大红袍",
+   "year": "",
+   "craft": "",
+   "weight": 16.6,
+   "consumed0": 0,
+   "price": 52.0,
+   "brand": "甘露禅茶",
+   "form": "散茶"
+  },
+  {
+   "id": "t1",
+   "class": "青茶",
+   "sub": "武夷岩茶",
+   "variety": "奇兰",
+   "name": "莲花峰奇兰",
+   "year": "",
+   "craft": "",
+   "weight": 24.9,
+   "consumed0": 0,
+   "price": 18.95,
+   "brand": "甘露禅茶",
+   "form": "散茶"
+  },
+  {
+   "id": "t2",
+   "class": "青茶",
+   "sub": "武夷岩茶",
+   "variety": "白鸡冠",
+   "name": "手工白鸡冠",
+   "year": "2013",
+   "craft": "传统焙火",
+   "weight": 30.0,
+   "consumed0": 0,
+   "price": 117.9,
+   "brand": "甘露禅茶",
+   "form": "散茶"
+  },
+  {
+   "id": "t3",
+   "class": "白茶",
+   "sub": "寿眉",
+   "variety": "寿眉",
+   "name": "故岁凝香寿眉",
+   "year": "90年代",
+   "craft": "",
+   "weight": 50.0,
+   "consumed0": 0,
+   "price": 268.64,
+   "brand": "醒砂",
+   "form": "散茶"
+  },
+  {
+   "id": "t4",
+   "class": "白茶",
+   "sub": "银针",
+   "variety": "银针",
+   "name": "荒野银针",
+   "year": "2020",
+   "craft": "",
+   "weight": 30.0,
+   "consumed0": 0,
+   "price": 149.0,
+   "brand": "甘露禅茶",
+   "form": "散茶"
+  },
+  {
+   "id": "t5",
+   "class": "青茶",
+   "sub": "武夷岩茶",
+   "variety": "水仙",
+   "name": "蘭-武彝水仙",
+   "year": "",
+   "craft": "",
+   "weight": 33.2,
+   "consumed0": 0,
+   "price": 70.63,
+   "brand": "甘露禅茶",
+   "form": "散茶"
+  },
+  {
+   "id": "t6",
+   "class": "白茶",
+   "sub": "贡眉",
+   "variety": "贡眉",
+   "name": "藏 群体种小白贡眉",
+   "year": "",
+   "craft": "2021",
+   "weight": 60.0,
+   "consumed0": 0,
+   "price": 187.2,
+   "brand": "甘露禅茶",
+   "form": "散茶"
+  },
+  {
+   "id": "t7",
+   "class": "青茶",
+   "sub": "武夷岩茶",
+   "variety": "矮脚乌龙",
+   "name": "矮脚乌龙",
+   "year": "2026",
+   "craft": "",
+   "weight": 16.6,
+   "consumed0": 0,
+   "price": 36.9,
+   "brand": "甘露禅茶",
+   "form": "散茶"
+  },
+  {
+   "id": "t8",
+   "class": "青茶",
+   "sub": "武夷岩茶",
+   "variety": "红孩儿",
+   "name": "慧苑红孩儿",
+   "year": "1999",
+   "craft": "",
+   "weight": 74.3,
+   "consumed0": 3.0,
+   "price": 571.7,
+   "brand": "甘露禅茶",
+   "form": "散茶"
+  },
+  {
+   "id": "t9",
+   "class": "青茶",
+   "sub": "武夷岩茶",
+   "variety": "玉桂",
+   "name": "传统焙火小玉桂",
+   "year": "2023",
+   "craft": "传统焙火",
+   "weight": 8.3,
+   "consumed0": 0,
+   "price": 4.77,
+   "brand": "甘露禅茶",
+   "form": "散茶"
+  },
+  {
+   "id": "t10",
+   "class": "青茶",
+   "sub": "武夷岩茶",
+   "variety": "老君眉",
+   "name": "足火老君眉",
+   "year": "",
+   "craft": "足火",
+   "weight": 8.3,
+   "consumed0": 0,
+   "price": 4.77,
+   "brand": "甘露禅茶",
+   "form": "散茶"
+  },
+  {
+   "id": "t11",
+   "class": "青茶",
+   "sub": "武夷岩茶",
+   "variety": "水仙",
+   "name": "小狗盒子 牛栏坑水仙（原价199）",
+   "year": "1996",
+   "craft": "",
+   "weight": 8.3,
+   "consumed0": 0,
+   "price": 49.0,
+   "brand": "甘露禅茶",
+   "form": "散茶"
+  },
+  {
+   "id": "t12",
+   "class": "白茶",
+   "sub": "贡眉",
+   "variety": "贡眉",
+   "name": "掌上明珠 2004老贡眉饼",
+   "year": "2004",
+   "craft": "",
+   "weight": 360.0,
+   "consumed0": 5.0,
+   "price": 494.66,
+   "brand": "甘露禅茶",
+   "form": "散茶"
+  },
+  {
+   "id": "t13",
+   "class": "青茶",
+   "sub": "武夷岩茶",
+   "variety": "",
+   "name": "相见欢8月惊喜盒子",
+   "year": "",
+   "craft": "",
+   "weight": 49.8,
+   "consumed0": 0,
+   "price": 89.05,
+   "brand": "甘露禅茶",
+   "form": "散茶"
+  },
+  {
+   "id": "t14",
+   "class": "青茶",
+   "sub": "武夷岩茶",
+   "variety": "紫玫瑰",
+   "name": "清风徐薇原生乌龙",
+   "year": "",
+   "craft": "",
+   "weight": 60.0,
+   "consumed0": 0,
+   "price": 57.6,
+   "brand": "甘露禅茶",
+   "form": "散茶"
+  },
+  {
+   "id": "t15",
+   "class": "青茶",
+   "sub": "武夷岩茶",
+   "variety": "丹桂",
+   "name": "参赛丹桂",
+   "year": "",
+   "craft": "中轻焙火",
+   "weight": 8.3,
+   "consumed0": 0,
+   "price": 4.77,
+   "brand": "甘露禅茶",
+   "form": "散茶"
+  },
+  {
+   "id": "t16",
+   "class": "红茶",
+   "sub": "正山小种",
+   "variety": "正山小种",
+   "name": "桐木关老丛红茶",
+   "year": "",
+   "craft": "",
+   "weight": 5.0,
+   "consumed0": 0,
+   "price": 4.7,
+   "brand": "甘露禅茶",
+   "form": "散茶"
+  },
+  {
+   "id": "t17",
+   "class": "青茶",
+   "sub": "武夷岩茶",
+   "variety": "梅占",
+   "name": "功夫梅占",
+   "year": "",
+   "craft": "传统焙火",
+   "weight": 8.3,
+   "consumed0": 0,
+   "price": 4.77,
+   "brand": "甘露禅茶",
+   "form": "散茶"
+  },
+  {
+   "id": "t18",
+   "class": "青茶",
+   "sub": "武夷岩茶",
+   "variety": "半天妖",
+   "name": "中火半天妖",
+   "year": "",
+   "craft": "中火",
+   "weight": 8.3,
+   "consumed0": 0,
+   "price": 4.77,
+   "brand": "甘露禅茶",
+   "form": "散茶"
+  },
+  {
+   "id": "t19",
+   "class": "黑茶",
+   "sub": "普洱",
+   "variety": "生普",
+   "name": "山野岚生普茶砖",
+   "year": "2016",
+   "craft": "",
+   "weight": 250.0,
+   "consumed0": 0,
+   "price": 29.9,
+   "brand": "空泥",
+   "form": "散茶"
+  },
+  {
+   "id": "t20",
+   "class": "青茶",
+   "sub": "凤凰单枞",
+   "variety": "",
+   "name": "颐之 富 姜花香",
+   "year": "2026",
+   "craft": "中轻火",
+   "weight": 30.0,
+   "consumed0": 0,
+   "price": 69.36,
+   "brand": "颐之",
+   "form": "散茶"
+  },
+  {
+   "id": "t21",
+   "class": "青茶",
+   "sub": "武夷岩茶",
+   "variety": "",
+   "name": "8月审评",
+   "year": "",
+   "craft": "",
+   "weight": 16.6,
+   "consumed0": 0,
+   "price": 36.9,
+   "brand": "甘露禅茶",
+   "form": "散茶"
+  },
+  {
+   "id": "t22",
+   "class": "青茶",
+   "sub": "武夷岩茶",
+   "variety": "梅占",
+   "name": "7月审评",
+   "year": "",
+   "craft": "",
+   "weight": 33.2,
+   "consumed0": 0,
+   "price": 73.8,
+   "brand": "甘露禅茶",
+   "form": "散茶"
+  },
+  {
+   "id": "t23",
+   "class": "青茶",
+   "sub": "武夷岩茶",
+   "variety": "白鸡冠",
+   "name": "无上清凉",
+   "year": "",
+   "craft": "",
+   "weight": 16.6,
+   "consumed0": 8.3,
+   "price": 36.9,
+   "brand": "甘露禅茶",
+   "form": "散茶"
+  },
+  {
+   "id": "t24",
+   "class": "红茶",
+   "sub": "滇红",
+   "variety": "滇红",
+   "name": "暖熏针型红茶",
+   "year": "",
+   "craft": "",
+   "weight": 60.0,
+   "consumed0": 0,
+   "price": 59.8,
+   "brand": "空泥",
+   "form": "散茶"
+  },
+  {
+   "id": "t25",
+   "class": "青茶",
+   "sub": "武夷岩茶",
+   "variety": "",
+   "name": "龙头洞老丛",
+   "year": "2006",
+   "craft": "",
+   "weight": 50.0,
+   "consumed0": 0,
+   "price": 49.0,
+   "brand": "甘露禅茶",
+   "form": "散茶"
+  },
+  {
+   "id": "t26",
+   "class": "青茶",
+   "sub": "武夷岩茶",
+   "variety": "白鸡冠",
+   "name": "清风时序年份白鸡冠",
+   "year": "",
+   "craft": "",
+   "weight": 49.8,
+   "consumed0": 0,
+   "price": 330.0,
+   "brand": "甘露禅茶",
+   "form": "散茶"
+  },
+  {
+   "id": "t27",
+   "class": "青茶",
+   "sub": "武夷岩茶",
+   "variety": "奇种",
+   "name": "慧苑万年春",
+   "year": "2013",
+   "craft": "传统焙火",
+   "weight": 60.0,
+   "consumed0": 0,
+   "price": 396.0,
+   "brand": "甘露禅茶",
+   "form": "散茶"
+  },
+  {
+   "id": "t28",
+   "class": "青茶",
+   "sub": "武夷岩茶",
+   "variety": "水仙",
+   "name": "九龙窠老丛水仙",
+   "year": "1999",
+   "craft": "",
+   "weight": 8.3,
+   "consumed0": 0,
+   "price": 96.99,
+   "brand": "甘露禅茶",
+   "form": "散茶"
+  },
+  {
+   "id": "t29",
+   "class": "青茶",
+   "sub": "武夷岩茶",
+   "variety": "佛手",
+   "name": "慧苑佛手",
+   "year": "2005",
+   "craft": "",
+   "weight": 8.3,
+   "consumed0": 0,
+   "price": 66.0,
+   "brand": "甘露禅茶",
+   "form": "散茶"
+  },
+  {
+   "id": "t30",
+   "class": "青茶",
+   "sub": "武夷岩茶",
+   "variety": "佛手",
+   "name": "清风净无尘",
+   "year": "",
+   "craft": "足火",
+   "weight": 16.6,
+   "consumed0": 0,
+   "price": 47.32,
+   "brand": "甘露禅茶",
+   "form": "散茶"
+  },
+  {
+   "id": "t31",
+   "class": "青茶",
+   "sub": "台湾乌龙",
+   "variety": "梨山乌龙",
+   "name": "梨山乌龙",
+   "year": "2026",
+   "craft": "",
+   "weight": 150.0,
+   "consumed0": 0,
+   "price": 399.0,
+   "brand": "醒砂",
+   "form": "散茶"
+  },
+  {
+   "id": "t32",
+   "class": "青茶",
+   "sub": "凤凰单枞",
+   "variety": "姜花香",
+   "name": "姜花香",
+   "year": "2026",
+   "craft": "",
+   "weight": 50.0,
+   "consumed0": 0,
+   "price": 218.0,
+   "brand": "醒砂",
+   "form": "散茶"
+  },
+  {
+   "id": "t33",
+   "class": "青茶",
+   "sub": "武夷岩茶",
+   "variety": "半天妖",
+   "name": "半天妖",
+   "year": "2010",
+   "craft": "",
+   "weight": 8.3,
+   "consumed0": 0,
+   "price": 35.8,
+   "brand": "甘露禅茶",
+   "form": "散茶"
+  },
+  {
+   "id": "t34",
+   "class": "青茶",
+   "sub": "武夷岩茶",
+   "variety": "",
+   "name": "2026年斗茶赛审评礼包",
+   "year": "2026",
+   "craft": "轻火",
+   "weight": 66.4,
+   "consumed0": 0,
+   "price": 84.2,
+   "brand": "甘露禅茶",
+   "form": "散茶"
+  },
+  {
+   "id": "t35",
+   "class": "黑茶",
+   "sub": "普洱",
+   "variety": "",
+   "name": "有蛇有得",
+   "year": "2024",
+   "craft": "",
+   "weight": 100.0,
+   "consumed0": 3.0,
+   "price": 340.0,
+   "brand": "古树盟",
+   "form": "散茶"
+  },
+  {
+   "id": "t36",
+   "class": "红茶",
+   "sub": "红茶",
+   "variety": "",
+   "name": "枞林深隐三百年老丛红茶",
+   "year": "",
+   "craft": "",
+   "weight": 10.0,
+   "consumed0": 0,
+   "price": 29.9,
+   "brand": "空泥",
+   "form": "散茶"
+  },
+  {
+   "id": "t37",
+   "class": "青茶",
+   "sub": "武夷岩茶",
+   "variety": "",
+   "name": "四大名丛品鉴集萃",
+   "year": "",
+   "craft": "",
+   "weight": 49.8,
+   "consumed0": 0,
+   "price": 74.0,
+   "brand": "甘露禅茶",
+   "form": "散茶"
+  },
+  {
+   "id": "t38",
+   "class": "青茶",
+   "sub": "武夷岩茶",
+   "variety": "",
+   "name": "莲生好事7月惊喜盒子",
+   "year": "",
+   "craft": "",
+   "weight": 49.8,
+   "consumed0": 0,
+   "price": 96.0,
+   "brand": "甘露禅茶",
+   "form": "散茶"
+  },
+  {
+   "id": "t39",
+   "class": "红茶",
+   "sub": "红茶",
+   "variety": "",
+   "name": "柑橘奶橙碳焙小种",
+   "year": "",
+   "craft": "",
+   "weight": 30.0,
+   "consumed0": 0,
+   "price": 39.9,
+   "brand": "甘露禅茶",
+   "form": "散茶"
+  },
+  {
+   "id": "t40",
+   "class": "青茶",
+   "sub": "武夷岩茶",
+   "variety": "大红袍",
+   "name": "素心兰",
+   "year": "2019",
+   "craft": "轻火",
+   "weight": 8.3,
+   "consumed0": 0,
+   "price": 5.88,
+   "brand": "甘露禅茶",
+   "form": "散茶"
+  },
+  {
+   "id": "t41",
+   "class": "白茶",
+   "sub": "银针",
+   "variety": "银针",
+   "name": "白毫银针",
+   "year": "2020",
+   "craft": "",
+   "weight": 50.0,
+   "consumed0": 0,
+   "price": 148.0,
+   "brand": "空泥",
+   "form": "散茶"
+  },
+  {
+   "id": "t42",
+   "class": "青茶",
+   "sub": "武夷岩茶",
+   "variety": "",
+   "name": "微瑕随机包",
+   "year": "",
+   "craft": "",
+   "weight": 99.6,
+   "consumed0": 0,
+   "price": 57.76,
+   "brand": "甘露禅茶",
+   "form": "散茶"
+  },
+  {
+   "id": "t43",
+   "class": "青茶",
+   "sub": "武夷岩茶",
+   "variety": "",
+   "name": "甘露小黑盒",
+   "year": "",
+   "craft": "",
+   "weight": 16.6,
+   "consumed0": 0,
+   "price": 43.38,
+   "brand": "甘露禅茶",
+   "form": "散茶"
+  },
+  {
+   "id": "t44",
+   "class": "青茶",
+   "sub": "武夷岩茶",
+   "variety": "铁罗汉",
+   "name": "10年九龙窠铁罗汉",
+   "year": "2010",
+   "craft": "",
+   "weight": 30.0,
+   "consumed0": 0,
+   "price": 120.0,
+   "brand": "甘露禅茶",
+   "form": "散茶"
+  },
+  {
+   "id": "t45",
+   "class": "青茶",
+   "sub": "武夷岩茶",
+   "variety": "悦茗香",
+   "name": "乌木栀子 悦茗香",
+   "year": "2018",
+   "craft": "",
+   "weight": 30.0,
+   "consumed0": 0,
+   "price": 68.0,
+   "brand": "甘露禅茶",
+   "form": "散茶"
+  },
+  {
+   "id": "t46",
+   "class": "青茶",
+   "sub": "武夷岩茶",
+   "variety": "黄奇",
+   "name": "黄奇",
+   "year": "",
+   "craft": "",
+   "weight": 30.0,
+   "consumed0": 0,
+   "price": 99.0,
+   "brand": "甘露禅茶",
+   "form": "散茶"
+  },
+  {
+   "id": "t47",
+   "class": "黄茶",
+   "sub": "黄大茶",
+   "variety": "黄大茶",
+   "name": "雅安蒙顶黄大茶",
+   "year": "",
+   "craft": "",
+   "weight": 100.0,
+   "consumed0": 0,
+   "price": 49.8,
+   "brand": "空泥",
+   "form": "散茶"
+  },
+  {
+   "id": "t48",
+   "class": "青茶",
+   "sub": "武夷岩茶",
+   "variety": "",
+   "name": "香蘭 轻盈版兰香乌龙",
+   "year": "2026",
+   "craft": "",
+   "weight": 166.0,
+   "consumed0": 0,
+   "price": 268.0,
+   "brand": "甘露禅茶",
+   "form": "散茶"
+  },
+  {
+   "id": "t49",
+   "class": "青茶",
+   "sub": "台湾乌龙",
+   "variety": "霁月乌龙",
+   "name": "霁月乌龙",
+   "year": "",
+   "craft": "",
+   "weight": 30.0,
+   "consumed0": 0,
+   "price": 57.6,
+   "brand": "其他",
+   "form": "散茶"
+  },
+  {
+   "id": "t50",
+   "class": "红茶",
+   "sub": "红茶",
+   "variety": "",
+   "name": "云幕红茶",
+   "year": "",
+   "craft": "",
+   "weight": 30.0,
+   "consumed0": 0,
+   "price": 57.6,
+   "brand": "其他",
+   "form": "散茶"
+  },
+  {
+   "id": "t51",
+   "class": "青茶",
+   "sub": "武夷岩茶",
+   "variety": "",
+   "name": "醉海棠",
+   "year": "",
+   "craft": "",
+   "weight": 8.3,
+   "consumed0": 0,
+   "price": 1.6,
+   "brand": "甘露禅茶",
+   "form": "散茶"
+  },
+  {
+   "id": "t52",
+   "class": "红茶",
+   "sub": "红茶",
+   "variety": "",
+   "name": "桐木关烟熏小种",
+   "year": "2022",
+   "craft": "",
+   "weight": 30.0,
+   "consumed0": 0,
+   "price": 115.2,
+   "brand": "甘露禅茶",
+   "form": "散茶"
+  },
+  {
+   "id": "t53",
+   "class": "青茶",
+   "sub": "武夷岩茶",
+   "variety": "",
+   "name": "口粮茶（肉桂+水仙+大红袍）",
+   "year": "",
+   "craft": "",
+   "weight": 249.0,
+   "consumed0": 0,
+   "price": 145.16,
+   "brand": "甘露禅茶",
+   "form": "散茶"
+  },
+  {
+   "id": "t54",
+   "class": "白茶",
+   "sub": "白茶",
+   "variety": "",
+   "name": "云南白茶白月光",
+   "year": "",
+   "craft": "",
+   "weight": 20.0,
+   "consumed0": 0,
+   "price": 19.9,
+   "brand": "空泥",
+   "form": "散茶"
+  },
+  {
+   "id": "t55",
+   "class": "黄茶",
+   "sub": "黄茶",
+   "variety": "",
+   "name": "贡东尖谷 古法黄茶",
+   "year": "",
+   "craft": "",
+   "weight": 50.0,
+   "consumed0": 0,
+   "price": 178.2,
+   "brand": "树见",
+   "form": "散茶"
+  },
+  {
+   "id": "t56",
+   "class": "青茶",
+   "sub": "台湾乌龙",
+   "variety": "百里桃香",
+   "name": "百里桃香",
+   "year": "",
+   "craft": "",
+   "weight": 50.0,
+   "consumed0": 0,
+   "price": 52.78,
+   "brand": "空泥",
+   "form": "散茶"
+  },
+  {
+   "id": "t57",
+   "class": "白茶",
+   "sub": "寿眉",
+   "variety": "寿眉",
+   "name": "琥珀蜜露",
+   "year": "",
+   "craft": "",
+   "weight": 50.0,
+   "consumed0": 0,
+   "price": 52.78,
+   "brand": "空泥",
+   "form": "散茶"
+  },
+  {
+   "id": "t58",
+   "class": "黑茶",
+   "sub": "六堡",
+   "variety": "六堡",
+   "name": "箬陈03",
+   "year": "",
+   "craft": "",
+   "weight": 50.0,
+   "consumed0": 0,
+   "price": 171.16,
+   "brand": "醒砂",
+   "form": "散茶"
+  },
+  {
+   "id": "t59",
+   "class": "青茶",
+   "sub": "台湾乌龙",
+   "variety": "杉林溪",
+   "name": "杉林溪",
+   "year": "",
+   "craft": "",
+   "weight": 150.0,
+   "consumed0": 0,
+   "price": 299.0,
+   "brand": "醒砂",
+   "form": "散茶"
+  },
+  {
+   "id": "t60",
+   "class": "青茶",
+   "sub": "凤凰单枞",
+   "variety": "",
+   "name": "颐之（拾花+岭上春）",
+   "year": "",
+   "craft": "",
+   "weight": 12.0,
+   "consumed0": 6.0,
+   "price": 14.3,
+   "brand": "颐之",
+   "form": "散茶"
+  },
+  {
+   "id": "t61",
+   "class": "青茶",
+   "sub": "武夷岩茶",
+   "variety": "",
+   "name": "紫气东来紫玫瑰",
+   "year": "",
+   "craft": "",
+   "weight": 50.0,
+   "consumed0": 17.5,
+   "price": 0,
+   "brand": "其他",
+   "form": "散茶"
+  },
+  {
+   "id": "t62",
+   "class": "青茶",
+   "sub": "武夷岩茶",
+   "variety": "",
+   "name": "金柳条（挚友）",
+   "year": "",
+   "craft": "",
+   "weight": 50.0,
+   "consumed0": 0,
+   "price": 0,
+   "brand": "甘露禅茶",
+   "form": "散茶"
+  },
+  {
+   "id": "t63",
+   "class": "青茶",
+   "sub": "武夷岩茶",
+   "variety": "",
+   "name": "慧苑水仙（挚友）",
+   "year": "",
+   "craft": "",
+   "weight": 100.0,
+   "consumed0": 0,
+   "price": 0,
+   "brand": "甘露禅茶",
+   "form": "散茶"
+  },
+  {
+   "id": "t64",
+   "class": "其他",
+   "sub": "大叶/粗条",
+   "variety": "",
+   "name": "黄褂岩大叶",
+   "year": "",
+   "craft": "",
+   "weight": 30.0,
+   "consumed0": 0,
+   "price": 111.0,
+   "brand": "",
+   "form": "袋装",
+   "note": "适合保温杯"
+  },
+  {
+   "id": "t65",
+   "class": "其他",
+   "sub": "大叶/粗条",
+   "variety": "",
+   "name": "兰若渡大叶",
+   "year": "",
+   "craft": "",
+   "weight": 60.0,
+   "consumed0": 0,
+   "price": 70.0,
+   "brand": "",
+   "form": "袋装",
+   "note": ""
+  },
+  {
+   "id": "t66",
+   "class": "其他",
+   "sub": "大叶/粗条",
+   "variety": "",
+   "name": "牛栏坑大叶",
+   "year": "",
+   "craft": "",
+   "weight": 50.0,
+   "consumed0": 0,
+   "price": 38.0,
+   "brand": "",
+   "form": "袋装",
+   "note": ""
+  },
+  {
+   "id": "t67",
+   "class": "其他",
+   "sub": "大叶/粗条",
+   "variety": "",
+   "name": "老丛香片",
+   "year": "",
+   "craft": "",
+   "weight": 20.0,
+   "consumed0": 0,
+   "price": 26.88,
+   "brand": "",
+   "form": "袋装",
+   "note": ""
+  },
+  {
+   "id": "t68",
+   "class": "其他",
+   "sub": "大叶/粗条",
+   "variety": "",
+   "name": "黄金叶手工白鸡冠黄条",
+   "year": "",
+   "craft": "",
+   "weight": 60.0,
+   "consumed0": 0,
+   "price": 66.0,
+   "brand": "",
+   "form": "袋装",
+   "note": ""
+  },
+  {
+   "id": "t69",
+   "class": "其他",
+   "sub": "其他",
+   "variety": "",
+   "name": "2023年足火玉井留香",
+   "year": "",
+   "craft": "",
+   "weight": 20.0,
+   "consumed0": 0,
+   "price": 35.8,
+   "brand": "",
+   "form": "袋装",
+   "note": ""
+  },
+  {
+   "id": "t70",
+   "class": "其他",
+   "sub": "其他",
+   "variety": "",
+   "name": "2026年老丛八仙",
+   "year": "",
+   "craft": "",
+   "weight": 25.0,
+   "consumed0": 0,
+   "price": 23.6,
+   "brand": "",
+   "form": "袋装",
+   "note": ""
+  },
+  {
+   "id": "t71",
+   "class": "其他",
+   "sub": "大叶/粗条",
+   "variety": "",
+   "name": "鬼洞矮脚粗条",
+   "year": "",
+   "craft": "",
+   "weight": 5.0,
+   "consumed0": 0,
+   "price": 49.0,
+   "brand": "",
+   "form": "袋装",
+   "note": ""
+  },
+  {
+   "id": "t72",
+   "class": "其他",
+   "sub": "茶米",
+   "variety": "",
+   "name": "08年三仰峰老丛水仙茶米",
+   "year": "",
+   "craft": "",
+   "weight": 30.0,
+   "consumed0": 0,
+   "price": 36.66,
+   "brand": "",
+   "form": "袋装",
+   "note": "茶碎"
+  },
+  {
+   "id": "t73",
+   "class": "其他",
+   "sub": "茶米",
+   "variety": "",
+   "name": "土国在肉桂茶米",
+   "year": "",
+   "craft": "",
+   "weight": 12.0,
+   "consumed0": 0,
+   "price": 30.88,
+   "brand": "",
+   "form": "袋装",
+   "note": ""
+  },
+  {
+   "id": "t74",
+   "class": "其他",
+   "sub": "茶米",
+   "variety": "",
+   "name": "灵瑞马头岩水仙茶米",
+   "year": "",
+   "craft": "",
+   "weight": 30.0,
+   "consumed0": 0,
+   "price": 29.9,
+   "brand": "",
+   "form": "袋装",
+   "note": ""
+  },
+  {
+   "id": "t75",
+   "class": "其他",
+   "sub": "茶米",
+   "variety": "",
+   "name": "掌柜最爱之一 茶米",
+   "year": "",
+   "craft": "",
+   "weight": 20.0,
+   "consumed0": 0,
+   "price": 36.6,
+   "brand": "",
+   "form": "袋装",
+   "note": ""
+  }
+ ],
+ "wares": [
+  {
+   "id": "w17",
+   "type": "紫砂壶",
+   "material": "大水潭绿泥",
+   "shape": "豆蔻西施",
+   "capacity": "110",
+   "recommend": ""
+  },
+  {
+   "id": "w18",
+   "type": "紫砂壶",
+   "material": "梨皮朱砂",
+   "shape": "逸公扁灯",
+   "capacity": "70",
+   "recommend": ""
+  },
+  {
+   "id": "w19",
+   "type": "紫砂壶",
+   "material": "五彩段",
+   "shape": "小巨轮",
+   "capacity": "100",
+   "recommend": ""
+  },
+  {
+   "id": "w20",
+   "type": "紫砂壶",
+   "material": "k7(紫泥段泥拼配）",
+   "shape": "水平",
+   "capacity": "90",
+   "recommend": ""
+  },
+  {
+   "id": "w21",
+   "type": "紫砂壶",
+   "material": "松花泥",
+   "shape": "矮梨",
+   "capacity": "100",
+   "recommend": ""
+  },
+  {
+   "id": "w22",
+   "type": "紫砂壶",
+   "material": "小煤窑朱泥",
+   "shape": "灵珠",
+   "capacity": "105",
+   "recommend": ""
+  },
+  {
+   "id": "w23",
+   "type": "紫砂壶",
+   "material": "白段",
+   "shape": "玉权",
+   "capacity": "85",
+   "recommend": ""
+  },
+  {
+   "id": "w24",
+   "type": "紫砂壶",
+   "material": "紫脂泥",
+   "shape": "高阳贡局",
+   "capacity": "100",
+   "recommend": ""
+  },
+  {
+   "id": "w25",
+   "type": "盖碗",
+   "material": "小煤窑朱泥紫砂",
+   "shape": "盖碗",
+   "capacity": "盖下60",
+   "recommend": ""
+  },
+  {
+   "id": "w26",
+   "type": "盖碗",
+   "material": "审评盖碗",
+   "shape": "盖碗",
+   "capacity": "满容80盖下60",
+   "recommend": ""
+  },
+  {
+   "id": "w27",
+   "type": "盖碗",
+   "material": "原矿青花",
+   "shape": "盖碗",
+   "capacity": "110盖下90",
+   "recommend": ""
+  },
+  {
+   "id": "w28",
+   "type": "保温杯",
+   "material": "钛杯",
+   "shape": "保温杯",
+   "capacity": "420",
+   "recommend": ""
+  }
+ ]
+};
+/* 图标（feather 风格内联 SVG） */
+const ICON_CUP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h12v5a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4V9z"/><path d="M16 10h2.5a2.5 2.5 0 0 1 0 5H16"/><path d="M8 3c0 1.2-1 1.2-1 2.4M12 3c0 1.2-1 1.2-1 2.4"/></svg>';
+const ICON_EDIT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>';
+/* 品鉴记录：中性描边图标，不与编辑铅笔混淆、且非彩色，契合整体设计 */
+const ICON_NOTE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l3 3v15H6z"/><path d="M9 9h6M9 13h6M9 17h4"/></svg>';
+const ICON_TRASH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>';
+const ICON_LEAF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6"/></svg>';
+/* 心形填充/描边统一由 CSS 控制(.iconbtn.fav svg)，不依赖 currentColor 继承 CSS 变量，避免部分 WebView 解析异常 */
+/* 心形 SVG 颜色直接写死为具体色值，不依赖 currentColor / CSS 变量——
+   安卓微信 WebView 对 stroke:var(--sub) 这类 CSS 变量描边解析不稳，会导致空心心不可见 */
+const HEART_OUT = '<svg viewBox="0 0 24 24" fill="none" stroke="#9a8f80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>';
+const HEART_FILL = '<svg viewBox="0 0 24 24" fill="#b5462f" stroke="#b5462f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>';
+const heartIcon = faved => faved ? HEART_FILL : HEART_OUT;
+const ICON_SORT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h11M3 12h8M3 18h5"/><path d="M18 7v10M18 17l3-3M18 7l-3 3"/></svg>';
+const ICON_FILTER = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h18l-7 8v6l-4 2v-8L3 4z"/></svg>';
+const ICON_CAL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>';
+/* 六大茶类：青茶(库存最多)置首，绿茶置尾；「其他」(袋装/分装等)不属于六大茶类，单独分隔 */
+const MAJOR = ['青茶','白茶','黄茶','红茶','黑茶','绿茶'];
+const CLASSES = [...MAJOR, '其他'];
+/* 常见小类（克制数量），点选自动填入「小类」输入框 */
+const SUB_COMMON = ['武夷岩茶','凤凰单枞','台湾乌龙','滇红','普洱','寿眉'];
+/* 小类随六大茶类联动：选了茶类后，弹窗下方只给出该类的 3-5 个常见小类 */
+const CLASS_SUBS = {
+  '青茶':['武夷岩茶','凤凰单枞','台湾乌龙','铁观音','漳平水仙'],
+  '白茶':['白毫银针','白牡丹','寿眉','贡眉'],
+  '红茶':['正山小种','滇红','祁门红茶','金骏眉','英红九号'],
+  '黑茶':['普洱（生）','普洱（熟）','安化黑茶','六堡茶'],
+  '绿茶':['龙井','碧螺春','毛峰','太平猴魁','安吉白茶'],
+  '黄茶':['君山银针','蒙顶黄芽','霍山黄芽'],
+  '其他':['花茶','再加工茶','紧压茶']
+};
+/* 品鉴心情（表情替代评分）：仅作记录，不强制打分 */
+const MOODS = ['😍','🙂','😐','😕','🤔'];
+const MOOD_TXT = {'😍':'超赞','🙂':'不错','😐':'一般','😕':'不佳','🤔':'说不清'};
+const MOOD_WEIGHT = {'😍':5,'🙂':4,'😐':3,'😕':2,'🤔':2.5};
+const STORE_T = 'tea_teas_v3', STORE_W = 'tea_wares_v3', STORE_R = 'tea_tastings_v3';
+
+function load(k,def){ try{const v=localStorage.getItem(k);return v?JSON.parse(v):def;}catch(e){return def;} }
+function save(){
+  try{
+    localStorage.setItem(STORE_T,JSON.stringify(teas));
+    localStorage.setItem(STORE_W,JSON.stringify(wares));
+    localStorage.setItem(STORE_R,JSON.stringify(records));
+  } catch(e){ /* 浏览器禁用 localStorage（如部分 file:// 环境）时，仅保留在内存中，请用「导出备份」留存 */ }
+  _syncCloud();
+}
+async function _syncCloud(){
+  try{
+    const { data:{ session } } = await _SUPA.auth.getSession();
+    if(!session) return;
+    await _SUPA.from('store').upsert([
+      { user_id:session.user.id, key:'teas',    value:teas    },
+      { user_id:session.user.id, key:'wares',   value:wares   },
+      { user_id:session.user.id, key:'records', value:records },
+    ], { onConflict:'user_id,key' });
+  }catch(e){}
+}
+
+let teas, wares, records;
+let editingRecId=null;            // 正在编辑的品鉴记录 id（null = 新建）
+let tasteSelTea='';               // 品鉴弹窗中当前选中的茶 id（搜索候选点选后写入）
+let tasteSelWare='';              // 品鉴弹窗中当前选中的茶具 id（列表点选后写入）
+const v3t = load(STORE_T, null);
+if(v3t){
+  teas = v3t;
+  wares = load(STORE_W, null) || JSON.parse(JSON.stringify(SEED.wares));
+  records = load(STORE_R, null) || [];
+} else {
+  /* 首次启动：以最新 Excel 为准；若本地有旧版(v2)数据，则尽量保留饮用进度与手动添加的茶/具 */
+  teas = JSON.parse(JSON.stringify(SEED.teas));
+  wares = JSON.parse(JSON.stringify(SEED.wares));
+  records = [];
+  const v2t = load('tea_teas_v2', null), v2w = load('tea_wares_v2', null);
+  if(v2t){
+    const byName={}; v2t.forEach(t=>{ if(t.name) byName[t.name.trim()]=t; });
+    const seedNames=new Set(teas.map(t=>(t.name||'').trim()));
+    v2t.forEach(t=>{ if(t.name && !seedNames.has(t.name.trim())) teas.push(t); });
+  }
+  if(v2w){
+    const key=w=>((w.material||'')+(w.shape||''));
+    const seedKeys=new Set(wares.map(key));
+    v2w.forEach(w=>{ if(!seedKeys.has(key(w))) wares.push(w); });
+  }
+  save();
+}
+
+/* 数据迁移：旧版「袋装茶」统一更名为「其他」，并按形态重新分小类 */
+function normalizeTea(t){
+  if(t.class==='袋装茶') t.class='其他';
+  if(t.class==='其他'){
+    const nm=t.name||'', note=t.note||'';
+    if(/茶米/.test(nm) || note==='茶碎') t.sub='茶米';
+    else if(/大叶|粗条|香片/.test(nm) || nm.endsWith('条') || /黄条/.test(nm)) t.sub='大叶/粗条';
+    else if(!t.sub || t.sub==='袋装茶' || t.sub==='袋泡(保温杯)') t.sub='其他';
+  }
+  return t;
+}
+teas = teas.map(normalizeTea);
+/* 确保每款茶都有 consumed0：首次从 Excel 种子取历史已消耗，之后保留本地值（含手动修改），绝不覆盖 */
+(function(){
+  const seedByName={}; SEED.teas.forEach(t=>{ if(t.name) seedByName[t.name.trim()]=t; });
+  teas.forEach(t=>{
+    if(t.consumed0===undefined){
+      const o=seedByName[(t.name||'').trim()];
+      t.consumed0 = (o && o.consumed0!==undefined) ? o.consumed0 : (t.consumed||0);
+    }
+    if('consumed' in t) delete t.consumed;
+  });
+})();
+/* 防呆：本地旧数据若净重丢失(0 / NaN / 缺失)，按 Excel 种子恢复，避免显示「0 / 0」 */
+(function(){
+  const seedById={}; SEED.teas.forEach(t=>{ if(t.id) seedById[t.id]=t; });
+  teas.forEach(t=>{
+    const s=seedById[t.id]; if(!s) return;
+    const w=+t.weight;
+    if(!t.weight || isNaN(w) || w<=0) t.weight = (s.weight>0)? s.weight : t.weight;
+  });
+})();
+
+/* 数据迁移：旧版单「购买日期+价格」转为「购买批次」数组（只记到月）。
+   仅录入了库存、从未做过购买记录的旧茶，自动计为一条购买记录；
+   有购买日期的用其月份，没有购买日期的月份留空（不填年份/当前年月），克数与花费照填 */
+(function(){
+  let dirty=false;
+  teas.forEach(t=>{
+    const legacy = !Array.isArray(t.purchases) || t.purchases.length===0;
+    if(legacy){
+      if((+t.weight||0)>0){
+        const m = (t.buyDate && t.buyDate.length>=7) ? t.buyDate.slice(0,7) : '';
+        t.purchases = [{m, price:+(t.price||0)||0, mode:'direct', per:0, n:0, g:+(t.weight||0)||0}];
+      } else {
+        t.purchases = [];
+      }
+      dirty=true;
+    }
+    /* 回退上一版「无购买日期却兜底填了 年份-01」的残留记录，使其月份重新留空 */
+    if((!t.buyDate || t.buyDate.length<7) && Array.isArray(t.purchases)){
+      t.purchases.forEach(p=>{ if(p && t.year && p.m === String(t.year)+'-01'){ p.m=''; dirty=true; } });
+    }
+  });
+  if(dirty) save();   // 迁移后立即持久化，否则刷新易丢失
+})();
+/* 数据迁移：旧版「星星评分」→「心情表情」，老记录的评分映射到对应表情，不丢失 */
+(function(){
+  const map={5:'😍',4:'🙂',3:'😐',2:'😕',1:'😕'};
+  let dirty=false;
+  (records||[]).forEach(r=>{
+    if(r && !r.mood && (+r.rating||0)>0){ r.mood = map[+r.rating] || '🙂'; dirty=true; }
+  });
+  if(dirty) save();
+})();
+
+/* ============ 工具 ============ */
+const $ = s=>document.querySelector(s);
+/* 已喝 = 初始已消耗(录入前历史) + 所有冲泡/品鉴记录克数；库存 = 总重量 − 已喝。杜绝重复扣减与旧数据覆盖 */
+function recSum(teaId){ return records.filter(r=>r.teaId===teaId).reduce((s,r)=>s+(+r.grams||0),0); }
+function consumedOf(t){ return (+t.consumed0||0)+recSum(t.id); }
+const rem = t=>Math.max(0,(+t.weight||0)-consumedOf(t));
+const fmt = n=> (Math.round(n*100)/100).toLocaleString();
+/* 消耗单位：袋装按「包」计，其余按「克」计（App 内部算剩余时统一累加 grams 字段） */
+function stockUnit(t){ return t.form==='袋装'?' 包':' g'; }
+/* 超库存提示文案：说清「剩余多少 / 本次多少 / 超出多少」，方便判断是不是填错了 */
+function overStockMsg(t, avail, g){
+  const u=stockUnit(t);
+  const over=(t.form==='袋装')?'':`（超出 ${fmt(g-avail)} g）`;
+  return `「${t.name}」剩余库存只有 ${fmt(avail)} g，本次填的是 ${fmt(g)}${u}${over}。`;
+}
+/* ============ 页面内提示 / 确认框 ============
+   原生 alert/confirm 在手机浏览器顶部会露出「页面网址」（浏览器防钓鱼设计，JS 去不掉）。
+   改为页面内浮层：既没有网址，也更贴合 App 风格。提示条自动消失，确认框带「取消 / 确定」。 */
+let toastTimer=null;
+function toast(msg, ms){
+  let el=document.getElementById('toastBox');
+  if(!el){
+    el=document.createElement('div'); el.id='toastBox';
+    el.style.cssText='position:fixed;left:50%;bottom:96px;transform:translateX(-50%);z-index:200;max-width:86vw;'+
+      'background:rgba(45,34,24,.94);color:#fff;font-size:13px;line-height:1.6;padding:11px 16px;border-radius:12px;'+
+      'box-shadow:0 6px 22px rgba(0,0,0,.28);opacity:0;transition:opacity .22s;pointer-events:none;white-space:pre-wrap';
+    document.body.appendChild(el);
+  }
+  el.textContent=msg; el.style.opacity='1';
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>{ el.style.opacity='0'; }, ms||2400);
+}
+let askCb=null;
+function askConfirm(msg, onYes, yesText){
+  askCb = onYes||null;
+  let box=document.getElementById('askBox');
+  if(!box){
+    box=document.createElement('div'); box.id='askBox';
+    box.style.cssText='position:fixed;inset:0;z-index:210;background:rgba(40,30,20,.45);display:none;'+
+      'align-items:center;justify-content:center;padding:18px';
+    box.innerHTML=`<div style="background:#fff;border-radius:16px;width:100%;max-width:340px;padding:20px">
+      <div id="askMsg" style="font-size:14px;line-height:1.75;color:#3a3128;white-space:pre-wrap"></div>
+      <div style="display:flex;gap:10px;margin-top:18px">
+        <button class="btn ghost" style="flex:1" onclick="closeAsk(false)">取消</button>
+        <button class="btn primary" id="askYes" style="flex:1" onclick="closeAsk(true)">确定</button>
+      </div></div>`;
+    box.addEventListener('click', e=>{ if(e.target===box) closeAsk(false); });
+    document.body.appendChild(box);
+  }
+  document.getElementById('askMsg').textContent=msg;
+  const yb=document.getElementById('askYes'); if(yb) yb.textContent=yesText||'确定';
+  box.style.display='flex';
+}
+function closeAsk(ok){
+  const box=document.getElementById('askBox'); if(box) box.style.display='none';
+  const cb=askCb; askCb=null;
+  if(ok && typeof cb==='function') cb();
+}
+const unitPrice = t=>{ const ps=t.purchases||[]; const g=ps.reduce((s,p)=>s+(+p.g||0),0); const c=ps.reduce((s,p)=>s+(+p.price||0),0); return g>0? c/g : (+t.weight>0? (+t.price||0)/(+t.weight):0); };
+function classCount(c){ return teas.filter(t=>t.class===c).length; }
+
+/* 价值相关 */
+function teaValueRem(t){ return unitPrice(t)*rem(t); }            // 现存价值 = 单价 × 现存克数
+function sortTeas(list){
+  if(sortBy==='weightRem') list.sort((a,b)=>rem(b)-rem(a));
+  else if(sortBy==='weightAsc') list.sort((a,b)=>{
+    const ra=rem(a), rb=rem(b);
+    if((ra>0)!==(rb>0)) return ra>0?-1:1;   // 已喝完（库存≤0）沉底，其余按库存升序
+    return ra-rb;
+  });
+  else if(sortBy==='priceDesc') list.sort((a,b)=>unitPrice(b)-unitPrice(a));   // 单价 高→低
+  else if(sortBy==='priceAsc') list.sort((a,b)=>unitPrice(a)-unitPrice(b));    // 单价 低→高
+  else list.sort((a,b)=>rem(b)-rem(a));   // 默认：现存库存高→低
+  return list;
+}
+function sortSelect(){
+  /* 选项文案保持短词，不加括号解释（默认=库存多→少，见 title 提示） */
+  const opts=[['default','推荐'],['weightAsc','库存 少→多'],
+    ['priceDesc','单价 高→低'],['priceAsc','单价 低→高']];
+  return `<span class="icsel" title="排序（默认「推荐」= 库存多→少）">${ICON_SORT}<select onchange="sortBy=this.value;refreshStockList()" aria-label="排序">${opts.map(([v,l])=>`<option value="${v}" ${sortBy===v?'selected':''} title="${v==='default'?'按库存多→少':''}">${l}</option>`).join('')}</select></span>`;
+}
+
+/* 投茶量基准(g) */
+function gramBase(t){
+  const c=t.class;
+  if(c==='绿茶') return 3;
+  if(c==='白茶') return t.sub.includes('寿眉')?6:5;
+  if(c==='黄茶') return 3;
+  if(c==='青茶') return 8;
+  if(c==='红茶') return 5;
+  if(c==='黑茶') return (t.craft&&t.craft.includes('熟'))?10:8;
+  if(c==='其他') return 1;
+  return 5;
+}
+/* 按 茶+茶具 算克数 */
+function computeGrams(t, w){
+  if(t.form==='袋装') return 1; // 包
+  const base = gramBase(t);
+  if(!w) return base;
+  if(w.type==='保温杯') return 3;
+  let mult = w.type==='紫砂壶'?0.9:1.0;
+  if(w.type==='紫砂壶'){ const cap=parseInt(w.capacity)||100; if(cap<90) mult*=0.85; }
+  return Math.max(Math.round(base*mult),4);
+}
+/* 冲泡建议 */
+function brewTip(t){
+  const c=t.class;
+  if(c==='绿茶') return '85–90℃ 水温，玻璃杯或盖碗，忌闷泡，1–2 泡即出，鲜爽为上。';
+  if(c==='白茶') return t.sub.includes('寿眉')? '老寿眉可沸水煮饮更甜润；新茶 90–95℃ 盖碗，前泡快出。'
+    : '90–95℃ 盖碗，银针/牡丹宜温柔出汤，可泡可煮。';
+  if(c==='黄茶') return '85–90℃ 盖碗，闷黄工艺，轻发酵，出汤稍快避免熟汤。';
+  if(c==='青茶') return '100℃ 沸水高冲，盖碗或紫砂，岩茶/单枞重韵味，可冲 7–9 泡。';
+  if(c==='红茶') return '90–95℃ 盖碗/紫砂/保温杯皆宜，清饮调饮均可，出汤宜快。';
+  if(c==='黑茶') return (t.craft&&t.craft.includes('熟'))? '100℃ 紫砂或盖碗，可洗茶一道，熟普煮饮更糯滑。'
+    : '100℃ 盖碗/紫砂，生普宜高香快出，老茶可煮。';
+  if(c==='其他') return '保温杯/马克杯直接冲泡，随泡随饮，方便省事。';
+  return '按茶性选择水温与器具。';
+}
+/* 推荐茶具（从用户库里挑） */
+function recommendWare(t){
+  const c=t.class;
+  let pref;
+  if(c==='黑茶') pref=['紫砂壶','盖碗'];
+  else if(c==='白茶') pref = t.sub.includes('寿眉')?['紫砂壶','盖碗']:['盖碗','紫砂壶'];
+  else if(c==='青茶') pref=['盖碗','紫砂壶'];
+  else if(c==='红茶') pref=['盖碗','紫砂壶','保温杯'];
+  else if(c==='黄茶'||c==='绿茶') pref=['盖碗'];
+  else if(c==='其他') pref=['保温杯'];
+  else pref=['盖碗'];
+  for(const ty of pref){ const w=wares.find(x=>x.type===ty); if(w) return w; }
+  return wares[0]||null;
+}
+/* 紫砂壶推荐茶类（按泥料+容量，给出推荐与依据） */
+function recommendZisha(w){
+  const cap = parseInt((w.capacity||'').replace(/\D/g,''))||0;
+  const m = w.material||'';
+  let fam;
+  if(/朱|朱砂|朱泥/.test(m)) fam='朱泥系';
+  else if(/绿泥/.test(m)) fam='段泥/绿泥系';
+  else if(/紫|松花/.test(m)) fam='紫泥系';
+  else if(/段|白段|五彩段/.test(m)) fam='段泥/绿泥系';
+  else fam = cap>=150?'紫泥系':(cap>=110?'段泥/绿泥系':'朱泥系');
+  let rec,basis;
+  if(fam==='朱泥系'){
+    rec = cap>0&&cap<100 ? '凤凰单枞 · 武夷岩茶(小品) · 清香乌龙' : '武夷岩茶 · 凤凰单枞 · 台湾乌龙 · 铁观音';
+    basis='朱泥密度高、聚香扬香，最宜高香乌龙/岩茶/单枞';
+  } else if(fam==='段泥/绿泥系'){
+    rec='绿茶 · 白茶(新) · 清香乌龙 · 新生普';
+    basis='段泥/绿泥色浅、不易吸味、不闷茶，宜轻发酵清香茶；足火岩茶/熟普易“养花”故不推荐';
+  } else {
+    rec = cap>=150 ? '普洱(生/熟) · 六堡 · 老白茶(煮) · 黑茶' : '普洱 · 岩茶(足火/老丛) · 六堡 · 黑茶';
+    basis='紫泥透气保温、醇化茶汤，宜后发酵/重火普洱黑茶与老茶';
+  }
+  return {rec,basis,fam};
+}
+
+/* ============ 挑茶评分 ============ */
+const seasonAff = {
+  春:{绿茶:1,白茶:.5,黄茶:1,青茶:.5,红茶:-.3,黑茶:-.5,其他:0},
+  夏:{绿茶:1,白茶:1,黄茶:.8,青茶:.4,红茶:-.8,黑茶:-1,其他:.2},
+  秋:{绿茶:.6,白茶:.6,黄茶:.4,青茶:1,红茶:.4,黑茶:.4,其他:0},
+  冬:{绿茶:-.5,白茶:.5,黄茶:.1,青茶:.8,红茶:1,黑茶:1,其他:.2}
+};
+const sceneAff = {
+  提神醒脑:{绿茶:1,普洱:1,单枞:1,青茶:.7,黄茶:.6,白茶:.3,红茶:-.5,黑茶:-.5,其他:.2},
+  暖身驱寒:{绿茶:-.3,白茶:.4,黄茶:.2,青茶:.9,红茶:1,黑茶:1,其他:.3},
+  解腻消食:{绿茶:.5,白茶:.4,黄茶:.4,青茶:1,红茶:.5,黑茶:.8,其他:.3},
+  安神放松:{绿茶:-.5,白茶:1,黄茶:.5,青茶:.5,红茶:.6,黑茶:.6,其他:.3},
+  办公随手:{绿茶:.3,白茶:.6,黄茶:.3,青茶:.5,红茶:.8,黑茶:.2,其他:1}
+};
+const timeAff = {
+  白天:{绿茶:.3,普洱:.3,单枞:.3,青茶:.1,白茶:0,红茶:0,黑茶:0,黄茶:.2,其他:.2},
+  晚上:{绿茶:-1.5,普洱:.6,单枞:-1,青茶:-.5,白茶:1,红茶:.8,黑茶:1,黄茶:-.3,其他:.2}
+};
+const fireCraft=['足火','中火','传统焙火','中轻焙火'];
+const lightCraft=['轻火','中轻火'];
+
+function pick(season,time,scene,classPref){
+  const cands=teas.filter(t=>rem(t)>0);
+  const res=cands.map(t=>{
+    const c=t.class; let s=0;
+    if(classPref && classPref!=='不限' && c!==classPref) return {t,sc:-1e9};
+    s += (seasonAff[season][c]??0)*1.5;
+    if(scene==='送礼有面') s += unitPrice(t)*8 + (t.year?0.5:0);
+    else s += (sceneAff[scene][c]??0)*1.5;
+    s += (timeAff[time][c]??0)*2;
+    s += Math.min(rem(t)/100,1);
+    if(scene==='暖身驱寒'&&fireCraft.includes(t.craft)) s+=1.2;
+    if(scene==='提神醒脑'&&lightCraft.includes(t.craft)) s+=1.2;
+    if(time==='晚上'&&c==='青茶'&&lightCraft.includes(t.craft)) s-=0.8;
+    return {t,sc:s};
+  }).filter(x=>x.sc>-1e8).sort((a,b)=>b.sc-a.sc).slice(0,5);
+  return res;
+}
+
+/* ============ 渲染 ============ */
+let view='stock', activeClass='', activeSub='', searchQ='', pickMode='chat';
+let onlyFav=false;               // 只看加心的茶（收藏视图）
+let sortBy='default';            // 排序：default / weightRem / priceDesc / priceAsc / weightAsc
+let calY=new Date().getFullYear(), calM=new Date().getMonth()+1;  // 喝茶日历当前年月
+const SAMPLE_G=20;               // 茶样阈值：净重 ≤ 20g 视为茶样（一般岩茶一泡 8.3g，两泡 16.6g）
+function isSample(t){ return (t.weight||0)>0 && (t.weight||0)<=SAMPLE_G; }
+function favCount(){ return teas.filter(t=>t.fav).length; }
+let tastingFilter='';              // 品鉴记录按茶筛选（teaId 或 ''）
+let tastingQ='';                   // 品鉴记录搜索关键词（茶名/品种/品牌/备注）
+
+/* —— 待完善提示：来自家庭小账本同步的茶叶 —— */
+function updateNeedCompleteBar(){
+  const bar=$('#needCompleteBar');if(!bar)return;
+  const pending=(teas||[]).filter(t=>t&&t.needComplete);
+  bar.style.display=pending.length?'flex':'none';
+  if(pending.length)$('#ncText').textContent='有 '+pending.length+' 款从账本同步来的茶待完善（茶名/克数已带入，其余信息待补）';
+}
+function showNeedComplete(){
+  const pending=(teas||[]).filter(t=>t&&t.needComplete);
+  if(!pending.length)return;
+  const list=pending.map(t=>'<div class="nc-item" onclick="openEditTea(\''+t.id+'\')">'+escHtml(t.name||'未命名')+' <span>点击完善 →</span></div>').join('');
+  $('#modal').innerHTML='<div class="sh-h"><div class="sh-t">待完善的茶 · '+pending.length+' 款</div><button class="x" onclick="closeMask()">×</button></div><div class="nc-list">'+list+'</div><div class="hint" style="margin-top:14px;color:#8B7B74;font-size:12px">完善并保存后，将不再提示</div>';
+  $('#mask').classList.add('on');
+}
+function escHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+function render(){
+  updateNeedCompleteBar();
+  const a=$('#app');
+  if(view==='stock') a.innerHTML=viewStock();
+  else if(view==='wares') a.innerHTML=viewWares();
+  /* else if(view==='pick') a.innerHTML=viewPick();  ← 问茶暂时下架，代码保留待重做 */
+  else if(view==='calendar') a.innerHTML=viewCalendar();
+  else if(view==='tasting') a.innerHTML=viewTasting();
+  bindView();
+}
+
+/* —— 总览 + 库存 合并页 —— */
+function overviewBlock(){
+  const totalRem = teas.reduce((s,t)=>s+rem(t),0);
+  const totalDrunk = teas.reduce((s,t)=>s+consumedOf(t),0);
+  const stats = [
+    {n:teas.length,l:'茶款数'},{n:Math.round(totalRem)+' g',l:'现存库存'},
+    {n:wares.length,l:'茶具数'},{n:Math.round(totalDrunk)+' g',l:'已喝'}
+  ];
+  return `<div class="stats">${stats.map(s=>`<div class="stat"><div class="n">${s.n}</div><div class="l">${s.l}</div></div>`).join('')}</div>`;
+}
+
+/* ============ 每日一语：节气 / 节日 / 每日小语 ============ */
+const TERMS=[ /* [名, 21世纪 C 常数, 文案] */
+  ['小寒',5.4055,'雁北乡，鹊始巢'],['大寒',20.12,'寒极转暖，岁末将更'],
+  ['立春',3.87,'东风解冻，万物始生'],['雨水',18.73,'好雨知时，润物无声'],
+  ['惊蛰',5.63,'春雷乍动，万物萌发'],['春分',20.646,'昼夜均分，燕语莺啼'],
+  ['清明',4.81,'气清景明，万物皆显'],['谷雨',20.1,'雨生百谷，茶香初透'],
+  ['立夏',5.52,'绿树成荫，万物并秀'],['小满',21.04,'小得盈满，麦粒渐丰'],
+  ['芒种',5.678,'有芒之种，忙而不茫'],['夏至',21.37,'日长之至，绿荫如盖'],
+  ['小暑',7.108,'温风至，蟋蟀居壁'],['大暑',22.83,'腐草为萤，静心纳凉'],
+  ['立秋',7.5,'凉风至，一叶知秋'],['处暑',23.13,'暑气止，秋意渐生'],
+  ['白露',7.646,'清风至，白露生'],['秋分',23.042,'金气秋分，昼夜均长'],
+  ['寒露',8.318,'露气寒冷，将凝为霜'],['霜降',23.438,'露结为霜，秋色斑斓'],
+  ['立冬',7.438,'水始冰，万物收藏'],['小雪',22.36,'寒未深，雪未大'],
+  ['大雪',7.18,'雪盛时，宜围炉'],['冬至',21.94,'日短之至，阳生一线']
+];
+const FEST={
+  '1-1':['元旦','新年伊始，万事胜意'],'2-14':['情人节','人间值得，爱意温柔'],
+  '3-8':['妇女节','如花在野，自在生光'],'3-12':['植树节','种一棵绿，等一片荫'],
+  '5-1':['劳动节','劳作生暖，生活可爱'],'6-1':['儿童节','童心未泯，日日新鲜'],
+  '9-10':['教师节','春风化雨，师恩难忘'],'10-1':['国庆','山河远阔，国泰民安'],
+  '12-24':['平安夜','灯暖夜长，平安是福'],'12-25':['圣诞节','愿你被世界温柔以待'],
+  '12-31':['跨年','旧岁将尽，新光可期']
+};
+const QUOTES=[
+  '且将新火试新茶，诗酒趁年华','一杯清茶，半日清闲','心若安处，便是晴天',
+  '慢下来，世界才会温柔','清风明月不用一钱买','松花酿酒，春水煎茶',
+  '无事此静坐，一日似两日','闲看庭前花开花落','云卷云舒，去留无意',
+  '偷得浮生半日闲','人间烟火气，最抚凡人心','愿你历尽千帆，归来仍是少年',
+  '春风十里，不如杯中有你','日子慢些走，茶要趁热喝','万事胜意，平安喜乐',
+  '心中有景，花香满径','温柔半两，从容一生','素履以往，一苇以航',
+  '愿你所求皆如愿，所行化坦途','山河温柔，人间值得','把日子过成诗，从一杯茶开始',
+  '风很温柔，你很特别','小小的确幸，藏在寻常里','向光而行，步履不停',
+  '生活明朗，万物可爱','且敬岁月一杯茶','归处是烟火，远方是星辰'
+];
+const WK=['日','一','二','三','四','五','六'];
+function termDateOf(y,i){const C=TERMS[i][1],Y=y-2000;let day=Math.floor(Y*0.2422+C)-Math.floor((Y-1)/4);const m=Math.floor(i/2)+1;return new Date(y,m-1,day);}
+function dayOfYear(d){return Math.floor((d-new Date(d.getFullYear(),0,0))/864e5);}
+function dateLabel(d){return (d.getMonth()+1)+' 月 '+d.getDate()+' 日 · 星期'+WK[d.getDay()];}
+/* 首页标题栏右侧的一行小字，如「白露 · 清风至，白露生」 */
+function dailyText(){
+  const d=new Date();const key=(d.getMonth()+1)+'-'+d.getDate();
+  if(FEST[key]){const [n,t]=FEST[key];return n+' · '+t;}
+  const y=d.getFullYear();
+  for(let i=0;i<24;i++){const t=termDateOf(y,i);if(t.getMonth()===d.getMonth()&&t.getDate()===d.getDate()){return TERMS[i][0]+' · '+TERMS[i][2];}}
+  return QUOTES[dayOfYear(d)%QUOTES.length];
+}
+
+/* ===== 农历 + 干支（日历页小字，如「农历七月廿五 · 丙午年丁酉月」） ===== */
+/* 农历数据：1900-2100，每年一个整数，低位 4bit=闰月，中间 12bit=各月大小，bit16=闰月大小 */
+const LUNAR_INFO=[0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,
+0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,
+0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,
+0x06566,0x0d4a0,0x0ea50,0x06e95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,
+0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,
+0x06ca0,0x0b550,0x15355,0x04da0,0x0a5b0,0x14573,0x052b0,0x0a9a8,0x0e950,0x06aa0,
+0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,
+0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b6a0,0x195a6,
+0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,
+0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x055c0,0x0ab60,0x096d5,0x092e0,
+0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,
+0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,
+0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,
+0x05aa0,0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,
+0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0,
+0x14b63,0x09370,0x049f8,0x04970,0x064b0,0x168a6,0x0ea50,0x06b20,0x1a6c4,0x0aae0,
+0x0a2e0,0x0d2e3,0x0c960,0x0d557,0x0d4a0,0x0da50,0x05d55,0x056a0,0x0a6d0,0x055d4,
+0x052d0,0x0a9b8,0x0a950,0x0b4a0,0x0b6a6,0x0ad50,0x055a0,0x0aba4,0x0a5b0,0x052b0,
+0x0b273,0x06930,0x07337,0x06aa0,0x0ad50,0x14b55,0x04b60,0x0a570,0x054e4,0x0d160,
+0x0e968,0x0d520,0x0daa0,0x16aa6,0x056d0,0x04ae0,0x0a9d4,0x0a2d0,0x0d150,0x0f252,
+0x0d520];
+const L_M=['正','二','三','四','五','六','七','八','九','十','冬','腊'];
+const L_D=['初一','初二','初三','初四','初五','初六','初七','初八','初九','初十',
+  '十一','十二','十三','十四','十五','十六','十七','十八','十九','二十',
+  '廿一','廿二','廿三','廿四','廿五','廿六','廿七','廿八','廿九','三十'];
+const GAN='甲乙丙丁戊己庚辛壬癸', ZHI='子丑寅卯辰巳午未申酉戌亥';
+function lLeapMonth(y){ return LUNAR_INFO[y-1900]&0xf; }
+function lLeapDays(y){ return lLeapMonth(y)?((LUNAR_INFO[y-1900]&0x10000)?30:29):0; }
+function lMonthDays(y,m){ return (LUNAR_INFO[y-1900]&(0x10000>>m))?30:29; }
+function lYearDays(y){ let s=348; for(let i=0x8000;i>0x8;i>>=1) s+=(LUNAR_INFO[y-1900]&i)?1:0; return s+lLeapDays(y); }
+/* 公历 → 农历（基准 1900-01-31 = 农历正月初一） */
+function solar2lunar(y,m,d){
+  let offset=Math.floor((Date.UTC(y,m-1,d)-Date.UTC(1900,0,31))/864e5);
+  let i=1900,temp=0;
+  for(i=1900;i<2101&&offset>0;i++){ temp=lYearDays(i); offset-=temp; }
+  if(offset<0){ offset+=temp; --i; }
+  const ly=i, leap=lLeapMonth(ly);
+  let isLeap=false, lm=1;
+  for(i=1;i<13&&offset>0;i++){
+    if(leap>0&&i===leap+1&&!isLeap){ --i; isLeap=true; temp=lLeapDays(ly); }
+    else temp=lMonthDays(ly,i);
+    if(isLeap&&i===leap+1) isLeap=false;
+    offset-=temp;
+  }
+  if(offset===0&&leap>0&&i===leap+1){ if(isLeap) isLeap=false; else { isLeap=true; --i; } }
+  if(offset<0){ offset+=temp; --i; }
+  lm=i;
+  return {ly:ly,lm:lm,ld:offset+1,isLeap:isLeap};
+}
+function lunarText(d){
+  const L=solar2lunar(d.getFullYear(),d.getMonth()+1,d.getDate());
+  return '农历'+(L.isLeap?'闰':'')+L_M[L.lm-1]+'月'+L_D[L.ld-1];
+}
+/* 干支：年柱以立春分界；月柱以「节」分界（寅月起于立春，酉月起于白露…）+ 五虎遁推月干 */
+const JIE=[[0,12],[2,1],[4,2],[6,3],[8,4],[10,5],[12,6],[14,7],[16,8],[18,9],[20,10],[22,11]];
+function ganzhiText(d){
+  const y=d.getFullYear();
+  let best=null;
+  for(const yy of [y-1,y]) for(const j of JIE){
+    const t=termDateOf(yy,j[0]);
+    if(t<=d && (!best||t>best.t)) best={t:t,mi:j[1],ty:yy};
+  }
+  if(!best) return '';
+  const gy = best.mi===12 ? best.ty-1 : best.ty;   /* 丑月属上一年（年末月） */
+  const yi=((gy-4)%60+60)%60, g=yi%10;
+  const mg=(g*2+2+(best.mi-1))%10, mz=(best.mi+1)%12;
+  return GAN[yi%10]+ZHI[yi%12]+'年'+GAN[mg]+ZHI[mz]+'月';
+}
+function lunarGanzhiText(){ const d=new Date(); return lunarText(d)+' · '+ganzhiText(d); }
+
+function viewStock(){
+  return overviewBlock() + `
+  <div class="toolbar">
+    <input id="searchBox" placeholder="搜索茶名 / 品种 / 小类…" value="${searchQ}" oninput="onSearch(this)">
+    <button class="btn ${onlyFav?'on':''}" onclick="toggleFav()" title="我加心的茶">❤ ${favCount()}</button>
+    <button class="btn addtea" onclick="openAddTea()" title="添加茶叶">${ICON_LEAF}<span class="plus">+</span></button>
+  </div>
+  <div id="stockList">${stockListHTML()}</div>`;
+}
+function stockListHTML(){
+  /* —— 加心视图：只看加心的茶（跨大类） —— */
+  if(onlyFav){
+    let list = teas.filter(t=>t.fav)
+      .filter(t=>!searchQ || (t.name+t.variety+t.sub+t.class).includes(searchQ));
+    list = sortTeas(list);
+    const body = list.length? `<div class="grid">${list.map(teaCard).join('')}</div>` : `<div class="empty">还没有加心的茶，在茶卡上点 ❤ 收藏吧。</div>`;
+    return `<div class="samplehead">❤ 我加心的茶 · 共 ${favCount()} 款（点 ❤ 退出）</div>
+    <div class="filterrow">${sortSelect()}</div>${body}`;
+  }
+  /* —— 常规分类视图：先选大类，再选小类；小类默认折叠，选中后可再次点击取消 —— */
+  const classtabsHTML = `<div class="classtabs">${MAJOR.map(c=>`<button class="${c===activeClass?'on':''}" onclick="toggleClass('${c}')">${c}</button>`).join('')}<span class="ctsep"></span><button class="other ${'其他'===activeClass?'on':''}" onclick="toggleClass('其他')">其他</button>
+    <span class="ctools">${sortSelect()}</span>
+  </div>`;
+  /* 未选大类：默认展示全部茶叶（不显示小类，选中大类后才展开小类） */
+  const pool = activeClass ? teas.filter(t=>t.class===activeClass) : teas;
+  const subs = activeClass ? Array.from(new Set(pool.map(t=>t.sub).filter(Boolean))) : [];
+
+  let list = pool
+    .filter(t=> !activeSub || t.sub===activeSub)
+    .filter(t=>!searchQ || (t.name+t.variety+t.sub).includes(searchQ));
+  list = sortTeas(list);
+
+  const body = list.length? `<div class="grid">${list.map(teaCard).join('')}</div>`
+    : `<div class="empty">该分类下暂无茶叶</div>`;
+  const subtabsHTML = subs.length? `<div class="subtabs">${subs.map(s=>`<button class="${s===activeSub?'on':''}" onclick="toggleSub('${s}')">${s}</button>`).join('')}</div>` : '';
+
+  return classtabsHTML + subtabsHTML + body;
+}
+/* 搜索输入只刷新列表区，不重建搜索框本身（避免中文输入法被打断、连续删除失效） */
+function onSearch(el){ searchQ=el.value; refreshStockList(); }
+function refreshStockList(){ const z=document.getElementById('stockList'); if(z) z.innerHTML=stockListHTML(); }
+function teaCard(t){
+  const r=rem(t), low=r>0&&r<20, pct=Math.min(100, r/Math.max(t.weight,1)*100);
+  const clsTag=`<span class="tag cls">${t.class}</span>`;
+  const subTag=t.sub?`<span class="tag">${t.sub}</span>`:'';
+  const varTag=t.variety?`<span class="tag var">${t.variety}</span>`:'';
+  const brandTag=t.brand?`<span class="tag brand">${t.brand}</span>`:'';
+  const sampleTag=isSample(t)?`<span class="tag sample">茶样</span>`:'';
+  const spendTag=t.noSpend?`<span class="tag" title="这款茶的购买金额不计入「月度购买花费」" style="opacity:.7">不计花费</span>`:'';
+  /* 年份 / 工艺 / 库存 / 已喝 / 单价 合并为一行中性信息，省掉单独一行 */
+  const info=[];
+  if(t.year) info.push(t.year);
+  if(t.craft) info.push(t.craft);
+  info.push(`库存 ${fmt(r)}/${fmt(t.weight)}g`);
+  info.push(`已喝 ${fmt(consumedOf(t))}g`);
+  const up=unitPrice(t);
+  info.push(`单价 ${up>0?fmt(up)+' 元/g':'—'}`);
+  const infoLine = `<div class="info">${info.join(' · ')}</div>`;
+  const recN = records.filter(x=>x.teaId===t.id).length;
+  return `<div class="tea" data-id="${t.id}">
+    <div class="thead"><h3>${t.name}</h3>
+      <div class="tea-acts">
+        ${recN?`<button class="iconbtn note" title="看品鉴记录" onclick="viewTastingByTea('${t.id}')">${ICON_NOTE}</button>`:''}
+        <button class="iconbtn" title="编辑" onclick="openEditTea('${t.id}')">${ICON_EDIT}</button>
+        <button class="iconbtn primary" title="喝一泡" onclick="openBrew('${t.id}')">${ICON_CUP}</button>
+        <button class="iconbtn fav ${t.fav?'faved':''}" title="${t.fav?'取消收藏':'加心'}" onclick="toggleFavTea('${t.id}')">${heartIcon(t.fav)}</button>
+      </div>
+    </div>
+    <div class="tags">${clsTag}${subTag}${varTag}${brandTag}${sampleTag}${spendTag}</div>
+    ${infoLine}
+    <div class="bar ${low?'low':''}"><i style="width:${pct}%"></i></div>
+  </div>`;
+}
+
+/* —— 茶具库 —— */
+function viewWares(){
+  const types=['紫砂壶','盖碗','保温杯'];
+  let html=`<div class="toolbar"><button class="btn" onclick="openAddWare()">+ 添加茶具</button></div>`;
+  types.forEach(ty=>{
+    const ws=wares.filter(w=>w.type===ty);
+    if(ws.length===0) return;
+    let items=ws.map(w=>{
+      const z = (!w.suit && w.type==='紫砂壶') ? (w.recommend ? {rec:w.recommend,basis:''} : recommendZisha(w)) : null;
+      return `<div class="ware" onclick="openEditWare('${w.id}')">
+        <div class="wt">${w.name?('<b>'+w.name+'</b> · '):''}${w.material||''} ${w.shape||''}</div>
+        <div class="wm">${w.capacity?w.capacity+'cc':''}</div>
+        ${w.suit?`<div class="rec"><b>适合的茶：</b>${w.suit}</div>`:''}
+        ${z?`<div class="rec"><b>推荐：</b>${z.rec}</div>`:''}
+      </div>`;
+    }).join('');
+    html+=`<div class="wgroup"><h4>${ty}（${ws.length}）</h4><div class="wgrid">${items}</div></div>`;
+  });
+  return html;
+}
+
+/* —— 挑茶助手（对话 + 条件 合并） —— */
+let p = {season:'春',time:'白天',scene:'提神醒脑',classPref:'不限'};
+function viewPick(){
+  return `
+  <div class="subtabs" style="margin-top:0">
+    <button class="${pickMode==='chat'?'on':''}" onclick="pickMode='chat';render()">💬 对话挑茶</button>
+    <button class="${pickMode==='form'?'on':''}" onclick="pickMode='form';render()">⚙ 条件筛选</button>
+  </div>
+  ${pickMode==='chat'? viewChat() : viewForm()}`;
+}
+function viewForm(){
+  return `
+  <div class="formrow"><label>季节</label><div class="opts" id="optSeason">
+    ${['春','夏','秋','冬'].map(s=>`<button class="${p.season===s?'on':''}" data-k="season" data-v="${s}">${s}</button>`).join('')}</div></div>
+  <div class="formrow"><label>时段</label><div class="opts" id="optTime">
+    ${['白天','晚上'].map(s=>`<button class="${p.time===s?'on':''}" data-k="time" data-v="${s}">${s}</button>`).join('')}</div></div>
+  <div class="formrow"><label>想喝的场景</label><div class="opts" id="optScene">
+    ${['提神醒脑','暖身驱寒','解腻消食','安神放松','送礼有面','办公随手'].map(s=>`<button class="${p.scene===s?'on':''}" data-k="scene" data-v="${s}">${s}</button>`).join('')}</div></div>
+  <div class="formrow"><label>茶类偏好</label><div class="opts" id="optClass">
+    ${['不限',...CLASSES].map(s=>`<button class="${p.classPref===s?'on':''}" data-k="classPref" data-v="${s}">${s}</button>`).join('')}</div></div>
+  <button class="btn" style="margin-top:8px" onclick="runPick()">开始挑茶</button>
+  <div id="pickResult" style="margin-top:18px"></div>`;
+}
+function renderPickResult(){
+  const res=pick(p.season,p.time,p.scene,p.classPref);
+  const box=$('#pickResult'); if(!box) return;
+  if(res.length===0){ box.innerHTML=`<div class="empty">没有符合条件的有货茶叶，换个条件试试？</div>`; return; }
+  box.innerHTML=`<div class="picks">${res.map((x,i)=>{
+    const t=x.t, w=recommendWare(t), g=computeGrams(t,w);
+    const perBrew=(unitPrice(t)*g);
+    return `<div class="pick">
+      <div class="ph"><h3>${t.name}</h3><div class="score">推荐度 ${fmt(x.sc)}</div></div>
+      <div class="tags" style="margin:6px 0"><span class="tag cls">${t.class}</span><span class="tag">${t.sub}</span>${t.variety?`<span class="tag var">${t.variety}</span>`:''}</div>
+      <div class="pinfo">
+        <div><span>单价</span><b>${unitPrice(t)>0?fmt(unitPrice(t))+' 元/g':'—'}</b></div>
+        <div><span>每泡花费</span><b>${perBrew>0?'约 '+fmt(perBrew)+' 元':'—'}</b></div>
+        <div><span>建议茶具</span><b>${w? (w.material + (w.shape?('·'+w.shape):'') + (w.capacity?(' · '+w.capacity+'cc'):'')) : '按茶性选盖碗或紫砂壶'}</b></div>
+        <div><span>投茶量</span><b>${t.form==='袋装'?g+' 包':g+' g'}</b></div>
+      </div>
+      <div class="brew">🍵 ${brewTip(t)}</div>
+      <button class="btn sm" style="margin-top:8px" onclick="openTaste('${t.id}')">记录这次品鉴</button>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function runPick(){ renderPickResult(); }
+
+/* —— 对话挑茶（规则引擎） —— */
+let chatCtx={season:null,time:null,scene:null,classPref:null,feelMode:false};
+let chatLog=[];
+function viewChat(){
+  return `<div class="chat">
+    <div class="msgs" id="msgs"></div>
+    <div class="input">
+      <input id="chatInput" placeholder="说说你想喝什么，如：晚上想安神放松喝点啥" onkeydown="if(event.key==='Enter')sendChat()">
+      <button class="btn" onclick="sendChat()">发送</button>
+    </div>
+  </div>`;
+}
+function chatRender(){
+  const m=$('#msgs'); if(!m) return;
+  m.innerHTML=chatLog.map(x=>{
+    if(x.from==='me') return `<div class="bub me">${x.text}</div>`;
+    let html=`<div class="bub bot">${x.text}`;
+    if(x.chips) html+=`<div>${x.chips.map(c=>`<button class="cbtn" onclick="chatChoose('${c.k}','${c.v}')">${c.v}</c.v></button>`).join('')}</div>`;
+    html+=`</div>`;
+    return html;
+  }).join('');
+  m.scrollTop=m.scrollHeight;
+}
+function chatSay(text,chips){ chatLog.push({from:'bot',text,chips}); chatRender(); }
+function chatMe(text){ chatLog.push({from:'me',text}); chatRender(); }
+
+function chatInit(){
+  chatLog=[]; chatCtx={season:null,time:null,scene:null,classPref:null,feelMode:false};
+  chatSay('你好，我是你的智能茶友 🍃 你只管说现在的状态或心情，比如「晚上想安神放松」「中午吃撑了解腻」「送领导什么有面子」，我直接从你的库存里挑合适的，还能算投茶量和冲泡法。',[
+    {k:'chatfeel',v:'💬 聊聊喝茶感受'},{k:'taste',v:'📝 记录一次品鉴'}
+  ]);
+}
+function currentSeason(){ const m=new Date().getMonth()+1; return m>=3&&m<=5?'春':m>=6&&m<=8?'夏':m>=9&&m<=11?'秋':'冬'; }
+function parseChat(text){
+  const t=text;
+  if(/晚上|夜里|夜|睡前|睡觉|助眠|安睡|失眠/.test(t)) chatCtx.time='晚上';
+  else if(/早上|早晨|上午|中午|下午|白天|傍晚|大清早/.test(t)) chatCtx.time='白天';
+  if(/提神|醒脑|困|累了|犯困|没精神|工作|学习|开车|打盹/.test(t)) chatCtx.scene='提神醒脑';
+  else if(/暖|驱寒|冷|寒|暖身|寒凉|手脚凉|冻/.test(t)) chatCtx.scene='暖身驱寒';
+  else if(/解腻|油腻|吃肉|饭后|聚餐|消化|撑|胀|腻/.test(t)) chatCtx.scene='解腻消食';
+  else if(/安神|放松|静|休息|舒缓|压力|焦虑|平复|睡/.test(t)) chatCtx.scene='安神放松';
+  else if(/送礼|客人|体面|请客|面子|送人|商务|领导/.test(t)) chatCtx.scene='送礼有面';
+  else if(/办公|随手|方便|出门|带着|旅行|出差|快捷|快/.test(t)) chatCtx.scene='办公随手';
+  if(/春/.test(t)) chatCtx.season='春';
+  else if(/夏/.test(t)) chatCtx.season='夏';
+  else if(/秋/.test(t)) chatCtx.season='秋';
+  else if(/冬/.test(t)) chatCtx.season='冬';
+  for(const c of CLASSES){ if(t.includes(c)) chatCtx.classPref=c; }
+}
+function chatKnowledge(text){
+  const t=text;
+  if(/怎么泡|如何泡|冲泡|水温|出汤|几秒|怎么冲|泡法/.test(t))
+    return '通用冲泡心法：绿茶/黄茶 85–90℃ 忌闷；白茶/青茶 90–100℃ 前几泡快出（5–15s）；红茶 90–95℃；黑茶/普洱可沸水、老茶煮饮。投茶约 3–8g/100ml，盖碗最百搭。想针对某款我帮你算投茶量～';
+  if(/洗茶|醒茶|润茶|第一泡.*倒|要不要洗/.test(t))
+    return '紧压茶（普洱、老白茶、部分岩茶）建议润茶一道，快速出汤倒掉；散茶、绿茶、轻发酵乌龙一般不必洗，第一泡即可饮。把茶名告诉我，我给你具体建议。';
+  if(/怎么存|存放|保存|储存|怕潮|变质|陈/.test(t))
+    return '存茶三要点：密封、避光、无异味、阴凉干燥。绿茶/黄茶/轻发酵乌龙建议冷藏；白茶/黑茶/岩茶常温通风处即可，反而越陈越香。南方回南天务必防潮。';
+  if(/岩茶|大红袍|肉桂|水仙|奇丹|武夷/.test(t))
+    return '武夷岩茶属青茶，重火功、有「岩骨花香」。足火岩茶暖身、适合冷天或晚上少量；轻火更清香提神。配盖碗或紫砂壶皆可，投茶约 8g。';
+  if(/单枞|凤凰|鸭屎香|蜜兰|芝兰/.test(t))
+    return '凤凰单枞是广东乌龙，高香型（蜜兰、鸭屎香、芝兰等），香气奔放、提神，白天喝最妙，盖碗快出汤。';
+  if(/普洱|生普|熟普/.test(t))
+    return '普洱分生熟：生普清爽回甘、提神刮油；熟普温润暖胃、安神。晚上想安神选熟普，白天解腻选生普，老茶可煮。';
+  if(/区别|差异|不一样|什么茶好|怎么选茶|哪种/.test(t) && /绿|红|白|黑|青|黄|乌龙/.test(t))
+    return '简明对照：绿茶清新鲜爽（提神）、白茶清润（老白茶暖身）、黄茶温和、青茶/乌龙香气多变（岩茶暖、单枞提神）、红茶温润、黑茶/普洱醇厚暖胃。把你的状态告诉我，我直接给你挑。';
+  if(/你好|在吗|你是谁|怎么用|帮我|能做什么/.test(t))
+    return '我是你的智能茶友 🍃 你只管说状态或心情，比如「晚上想放松一下」「中午吃撑了解腻」「送领导什么有面子」，我就从你的库存里挑合适的，还能算投茶量和冲泡法。';
+  if(/谢谢|多谢|赞|牛|厉害|好棒/.test(t))
+    return '举手之劳～先把茶喝好，喝到喜欢的记得在「品鉴记录」里记一笔，我以后更懂你。';
+  return null;
+}
+function maybeRecommendOrAsk(){
+  chatCtx.season = chatCtx.season || currentSeason();
+  if(!chatCtx.time) return chatSay('现在是白天还是晚上呢？',[{k:'time',v:'白天'},{k:'time',v:'晚上'}]);
+  if(!chatCtx.scene) return chatSay('想喝点什么功效的茶？',[
+    {k:'scene',v:'提神醒脑'},{k:'scene',v:'暖身驱寒'},{k:'scene',v:'解腻消食'},
+    {k:'scene',v:'安神放松'},{k:'scene',v:'送礼有面'},{k:'scene',v:'办公随手'}]);
+  if(!chatCtx.classPref) chatCtx.classPref='不限';
+  doChatPick();
+}
+function sendChat(){
+  const inp=$('#chatInput'); const v=inp.value.trim(); if(!v) return;
+  chatMe(v); inp.value='';
+  if(chatCtx.feelMode){ feelReply(v); return; }
+  const kb=chatKnowledge(v);
+  if(kb){ chatSay(kb); return; }     // 知识类问题直接答，不强制走挑茶流程
+  parseChat(v);
+  maybeRecommendOrAsk();
+}
+function topRated(){
+  if(!records || !records.length) return [];
+  const m={}; records.forEach(r=>{ const w=MOOD_WEIGHT[r.mood]||0; if(w) m[r.teaName]=(m[r.teaName]||0)+w; });
+  return Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,3).map(x=>x[0]);
+}
+function brewReason(t,c){
+  const cls=t.class;
+  if(c.scene==='提神醒脑' && ['绿茶','青茶','黄茶'].includes(cls)) return '咖啡因与芳香足，醒神不厚重';
+  if(c.scene==='暖身驱寒' && ['黑茶','红茶','白茶'].includes(cls)) return '温润暖身，寒天或体寒时最熨帖';
+  if(c.scene==='解腻消食' && ['青茶','黑茶','绿茶'].includes(cls)) return '刮油解腻，饭后一口舒坦';
+  if(c.scene==='安神放松' && ['白茶','黑茶','红茶'].includes(cls)) return '柔和顺滑、不刺激，利于平心静气';
+  if(c.scene==='送礼有面' && (+unitPrice(t)>0)) return '品质与身价都在线，拿出手有面子';
+  if(c.scene==='办公随手' && ['绿茶','白茶'].includes(cls)) return '清饮耐泡、随手可冲';
+  if(c.time==='晚上' && ['绿茶','青茶'].includes(cls)) return '白天更提神，晚上宜少饮以免影响睡眠';
+  return '风味与状态契合，喝着顺';
+}
+function doChatPick(){
+  const c=chatCtx;
+  const season=c.season||currentSeason();
+  const res=pick(season,c.time,c.scene,c.classPref);
+  const fav=topRated();
+  const sceneWord={'提神醒脑':'提神醒脑','暖身驱寒':'暖身驱寒','解腻消食':'解腻消食','安神放松':'安神放松','送礼有面':'送礼有面子','办公随手':'随手方便'}[c.scene]||c.scene;
+  let head=`现在是${season}，你说是${c.time}、想${sceneWord}`;
+  if(c.classPref&&c.classPref!=='不限') head+=`，还想喝${c.classPref}`;
+  head+=`。我从你的库存里挑了最合拍的几款：`;
+  if(fav.length) head+=`（你之前偏爱的 ${fav.slice(0,2).join('、')} 也在候选里）`;
+  chatSay(head);
+  if(res.length===0){ chatSay('符合条件的有货茶叶暂时没有，换个状态或茶类我再帮你挑～ 也可以先去「茶叶」里添一款。'); return; }
+  res.slice(0,3).forEach(x=>{
+    const t=x.t,w=recommendWare(t),g=computeGrams(t,w);
+    const perBrew=unitPrice(t)*g;
+    chatSay(`🍵 <b>${t.name}</b>（${t.class}·${t.sub}${t.variety?'·'+t.variety:''}）\n`+
+      `推荐理由：当前${season}·${c.time}·${sceneWord}，${t.class}正合适；${brewReason(t,c)}\n`+
+      `单价 ${unitPrice(t)>0?fmt(unitPrice(t))+' 元/g':'—'}，每泡约 ${perBrew>0?fmt(perBrew)+' 元':'—'}\n`+
+      `建议用 ${w?w.type+'（'+w.material+'）':'自备盖碗'}，投茶 ${t.form==='袋装'?g+' 包':g+' g'}\n`+
+      `冲泡：${brewTip(t)}`);
+  });
+  const top=res[0].t;
+  chatSay('想记一下这次的感受吗？',[
+    {k:'taste',v:top.id},
+    {k:'reset',v:'重新挑茶'}
+  ]);
+}
+function feelReply(text){
+  let r='收到～';
+  const fav=topRated();
+  if(/香|花香|果香|蜜|奶|兰|桂|橙|馥/.test(text)) r='高香路线呀，凤凰单枞、台湾乌龙、轻火岩茶这类香气奔放的，你大概会喜欢。'+(fav.length?`你之前也偏爱 ${fav[0]}。`:'');
+  else if(/回甘|甜|润|滑|蜜/.test(text)) r='回甘生津是好茶的信号，你偏甜润，白茶、足火岩茶、熟普可以多留意。';
+  else if(/苦|涩|锁喉|刺激|酸|杂|刮/.test(text)) r='苦涩或锁喉多半火功偏高或投茶过量、水温太高，下次我帮你挑轻火、少投点、快出汤。';
+  else if(/好喝|喜欢|惊艳|绝|爱|上头|惊艳/.test(text)) r='合心意最难得！我记下了，以后多给你推同类。';
+  else if(/一般|平平|不喜欢|难喝|踩雷|接受不了/.test(text)) r='口味各有所好，避开这类我帮你换方向。';
+  else if(/暖|舒|熨帖|放松|安神/.test(text)) r='喝得舒服就好，暖润的茶最养人。';
+  chatSay(r+' 想的话在「品鉴记录」里记一笔，我以后更懂你 🍃',[{k:'taste',v:''}]);
+}
+function chatChoose(k,v){
+  if(k==='reset'){ chatInit(); return; }
+  if(k==='chatfeel'){ chatCtx.feelMode=true; chatSay('好呀，说说你最近喝的那款茶？香气、滋味、体感，或者单纯喜不喜欢都行，我记在心里～'); return; }
+  if(k==='taste'){ openTaste(v||null); return; }
+  if(k==='classPref'&&v!=='不限'){ chatCtx.classPref = CLASSES.includes(v)?v:'不限'; }
+  else chatCtx[k]=v;
+  chatMe(v);
+  maybeRecommendOrAsk();
+}
+
+/* ============ 弹窗：喝一泡 ============ */
+function openBrew(id){
+  const t=teas.find(x=>x.id===id); if(!t) return;
+  const opts=wares.map(w=>`<option value="${w.id}">${w.type} · ${w.material} ${w.capacity?('('+w.capacity+'cc)'):''}</option>`).join('')
+    || `<option value="">（暂无茶具，将按默认投茶量）</option>`;
+  const w0=recommendWare(t);
+  const defG=computeGrams(t,w0);
+  $('#modal').innerHTML=`<span class="x" onclick="closeMask()">×</span>
+    <h3>喝一泡 · ${t.name}</h3>
+    <label>饮用日期</label>
+    <input id="brewDate" type="date" value="${new Date().toISOString().slice(0,10)}">
+    <label>使用茶具</label>
+    <select id="brewWare" onchange="rebrewGrams('${id}')">${opts}</select>
+    <label>本次投茶量（${t.form==='袋装'?'包':'g'}）</label>
+    <div class="mrow"><div><input id="brewGrams" type="number" min="0" step="${t.form==='袋装'?1:0.5}" value="${defG}" oninput="checkBrewStock('${id}')"></div>
+    <div style="display:flex;align-items:flex-end"><button class="btn ghost sm" onclick="autoGrams('${id}')">用推荐量</button></div></div>
+    <div class="hint" id="brewStock">${brewStockTip(t, defG)}</div>
+    <div class="hint" id="brewHint">${brewTip(t)}</div>
+    <div class="acts"><button class="btn ghost" onclick="closeMask()">取消</button>
+      <button class="btn" onclick="confirmBrew('${id}')">确认冲泡并扣库存</button></div>`;
+  $('#mask').classList.add('on');
+}
+function curWare(){
+  const v=$('#brewWare')?$('#brewWare').value:''; return wares.find(w=>w.id===v)||null;
+}
+function rebrewGrams(id){
+  const t=teas.find(x=>x.id===id); const w=curWare();
+  $('#brewGrams').value=computeGrams(t,w);
+  $('#brewHint').textContent=brewTip(t);
+  const sb=$('#brewStock'); if(sb) sb.innerHTML=brewStockTip(t, computeGrams(t,w));
+}
+/* 剩余库存实时提示：随投茶量变化，超出时红色高亮，提交前就能发现 */
+function brewStockTip(t,g){
+  const u=stockUnit(t); const r0=rem(t);
+  if(!(+t.weight>0)) return `当前库存 ${fmt(r0)} g`;
+  if(g>r0+0.001) return `<b style="color:var(--red)">⚠ 仅剩 ${fmt(r0)} g，本次 ${fmt(g)}${u} 已超出库存</b>`;
+  return `当前剩余 ${fmt(r0)} g，本次 ${fmt(g)}${u}，记完还剩 ${fmt(Math.max(0,r0-g))} g`;
+}
+function checkBrewStock(id){
+  const t=teas.find(x=>x.id===id); if(!t) return;
+  const g=parseFloat($('#brewGrams').value)||0;
+  const el=$('#brewStock'); if(el) el.innerHTML=brewStockTip(t,g);
+}
+function autoGrams(id){ rebrewGrams(id); }
+function confirmBrew(id){
+  const t=teas.find(x=>x.id===id); if(!t) return;
+  let g=parseFloat($('#brewGrams').value)||0;
+  if(g<=0){ toast('投茶量需大于 0'); return; }
+  /* 已喝由冲泡记录自动累计（见 rem/recSum），此处只写一条记录，避免重复扣减 */
+  const doBrew=()=>{
+    const w=curWare();
+    const d=$('#brewDate')? $('#brewDate').value : '';
+    records.unshift({id:'r'+Date.now(), teaId:id, teaName:t.name,
+      wareId:w?w.id:'', wareName:w?(w.type+'·'+w.material):'', date:d,
+      grams:g, rating:0, aroma:'',taste:'',feel:'',note:''});
+    save(); closeMask(); render();
+  };
+  /* 库存校验：把「当前剩余 / 本次填写 / 超出多少」说清楚，方便判断是不是填错了 */
+  const r0=rem(t);
+  if(g>r0+0.001){ askConfirm(overStockMsg(t, r0, g), doBrew, '仍要记录'); return; }
+  doBrew();
+}
+
+/* ============ 弹窗：编辑/添加 茶叶 ============ */
+let curBuys=[];   // 编辑/添加茶时，临时的「购买批次」数组（按月份）
+function totalBuyGrams(arr){ return (arr||[]).reduce((s,p)=>s+(+p.g||0),0); }
+function buyRows(){
+  if(!curBuys.length) return `<div class="hint" style="padding:2px 0 4px">暂无购买记录（不加则无法计算入库总量）</div>`;
+  return curBuys.map((p,i)=>{
+    const isBag=p.mode==='bag';
+    const g=isBag?Math.round((((+p.per)||8.3)*(+p.n||0))*10)/10:(+p.g||0);
+    const inner=isBag
+      ? `<select class="bper" onchange="buySync(${i},'per',this.value)" aria-label="每泡克数">
+           ${[8.3,5,6].map(v=>`<option value="${v}" ${((+p.per||8.3)===v)?'selected':''}>${v}</option>`).join('')}
+         </select><span class="bx">×</span>
+         <input type="number" class="bn" placeholder="泡数" value="${p.n||''}" oninput="buySync(${i},'n',this.value)" aria-label="泡数">
+         <span class="bgres" id="bgres${i}">${g?('= '+g+' g'):''}</span>`
+      : `<input type="number" class="bg" placeholder="克数" value="${p.g||''}" oninput="buySync(${i},'g',this.value)" aria-label="克数">`;
+    return `<div class="buyrow">
+      <input type="month" class="bm" value="${p.m||''}" onchange="buySync(${i},'m',this.value)" aria-label="购买月份">
+      <div class="bmod">
+        <div class="bmodes">
+          <button type="button" class="${!isBag?'on':''}" onclick="buyMode(${i},'direct')">直接填</button>
+          <button type="button" class="${isBag?'on':''}" onclick="buyMode(${i},'bag')">按每泡</button>
+        </div>
+        <div class="bin" id="bin${i}">${inner}</div>
+      </div>
+      <input type="number" class="bp" placeholder="花费¥" value="${p.price||''}" oninput="buySync(${i},'price',this.value)" aria-label="花费">
+      <button type="button" class="bdel" title="删除该条" onclick="buyDel(${i})">×</button>
+    </div>`;
+  }).join('');
+}
+function buySync(i,k,v){
+  if(!curBuys[i]) return;
+  const p=curBuys[i];
+  if(k==='m'){ p.m=v; return; }
+  const num=(+v||0);
+  if(k==='g') p.g=num;
+  else if(k==='per') p.per=num;
+  else if(k==='n') p.n=num;
+  else if(k==='price') p.price=num;
+  p.g = (p.mode==='bag') ? Math.round((((+p.per)||8.3)*(+p.n||0))*10)/10 : Math.round((+p.g||0)*10)/10;
+  const r=document.getElementById('bgres'+i); if(r) r.textContent= p.g?('= '+p.g+' g'):'';
+  updateStockTotal();
+}
+function buyMode(i,mode){
+  const p=curBuys[i]; if(!p) return;
+  p.mode=mode;
+  if(mode==='bag'){ if(!(+p.per)) p.per=8.3; if(!(+p.n)) p.n=1; }
+  renderBuyList(); updateStockTotal();
+}
+function buyAdd(){ curBuys.push({m:curMonth(),mode:'bag',price:0,per:'',n:'',g:''}); renderBuyList(); updateStockTotal(); }
+function buyDel(i){ curBuys.splice(i,1); renderBuyList(); updateStockTotal(); }
+function renderBuyList(){ const el=document.getElementById('buyList'); if(el) el.innerHTML=buyRows(); }
+function updateStockTotal(){ const el=document.getElementById('stockTotal'); if(el) el.textContent=totalBuyGrams(curBuys)+' g'; }
+function teaForm(t,isNew){
+  window._brands = usedBrands();
+  const brandChips = window._brands.map((b,i)=>`<span class="chip" onclick="setBrand(${i})">${b}</span>`).join('');
+  return `<span class="x" onclick="closeMask()">×</span>${!isNew?`<button type="button" class="del-fab" title="删除这款茶" onclick="delTea('${t.id}')">删除</button>`:''}<h3>${isNew?'添加茶叶':'编辑茶叶'}</h3>
+  <label>茶类（六大茶类）</label>
+  <select id="f_class" onchange="updateSubChips()">${CLASSES.map(c=>`<option ${t.class===c?'selected':''}>${c}</option>`).join('')}</select>
+  <div class="mrow"><div style="flex:1;min-width:0"><label>小类</label><input id="f_sub" value="${t.sub||''}" placeholder="如：武夷岩茶"></div>
+  <div><label>品种（如肉桂）</label><input id="f_variety" value="${t.variety||''}"></div></div>
+  <div class="subchips" id="subchips">${(CLASS_SUBS[t.class]||[]).map(s=>`<span class="chip" onclick="setSub('${s}')">${s}</span>`).join('')}</div>
+  <label>茶名</label><input id="f_name" value="${t.name||''}">
+  <label>品牌 / 店铺</label>
+  <input id="f_brand" value="${t.brand||''}" placeholder="如：甘露禅茶" list="brandList" autocomplete="off">
+  <datalist id="brandList">${window._brands.map(b=>`<option value="${b}">`).join('')}</datalist>
+  ${brandChips?`<div class="brandchips">${brandChips}</div>`:''}
+  <div class="mrow"><div><label>年份</label><input id="f_year" value="${t.year||''}"></div>
+  <div><label>工艺（轻火/足火等）</label><input id="f_craft" value="${t.craft||''}"></div></div>
+  <div class="formrow" style="margin-top:4px"><label>入库总量(g) · 自动</label>
+    <div class="ro" id="stockTotal">${totalBuyGrams(curBuys)} g</div></div>
+  <div class="mrow"><div><label>初始已消耗(g) · 录入前已喝</label><input id="f_consumed0" type="number" step="0.1" value="${t.consumed0||0}" placeholder="如：17.5"></div>
+  <div><label>当前已喝（自动）</label><div class="ro">${fmt(consumedOf(t))} g</div></div></div>
+  <!-- 价格字段已移除 -->
+  <label class="spendchk" style="display:flex;align-items:center;gap:8px;margin:12px 0 2px;font-size:13px;color:var(--sub);cursor:pointer">
+    <input type="checkbox" id="f_spend" ${t.noSpend?'':'checked'} style="width:16px;height:16px;margin:0;flex:0 0 auto">
+    <span>价格计入「月度购买花费」（取消勾选则这款茶的购买金额不计入统计）</span>
+  </label>
+  <div class="buytitle">购买记录（按月 · 同款分月分条记）</div>
+  <div id="buyList">${buyRows()}</div>
+  <button type="button" class="btn ghost sm" onclick="buyAdd()">+ 添加购买记录</button>
+  <div class="acts"><button class="btn ghost" onclick="closeMask()">取消</button>
+    <button class="btn" onclick="saveTea('${t.id}','${isNew}')">保存</button></div>`;
+}
+function usedBrands(){ return Array.from(new Set(teas.map(t=>t.brand).filter(Boolean))); }
+function setBrand(i){ const el=document.getElementById('f_brand'); if(el&&window._brands[i]!=null) el.value=window._brands[i]; }
+function setSub(v){ const el=document.getElementById('f_sub'); if(el) el.value=v; }
+/* 选了茶类后，下方小类快捷选项随之变化（只给该类的 3-5 个常见小类） */
+function updateSubChips(){
+  const c=document.getElementById('f_class')?.value;
+  const wrap=document.getElementById('subchips');
+  if(!wrap) return;
+  const list=CLASS_SUBS[c]||[];
+  wrap.innerHTML=list.map(s=>`<span class="chip" onclick="setSub('${s}')">${s}</span>`).join('');
+}
+function curMonth(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
+/* 重量改为由购买批次克数自动汇总，已移除手动/泡袋录入 */
+function openAddTea(){ const t={id:Math.random().toString(36).slice(2,10),class:'青茶',sub:'',variety:'',name:'',year:'',craft:'',weight:0,consumed0:0,price:0,buyDate:'',purchases:[],form:'散茶',note:'',noSpend:false};
+  curBuys=[]; $('#modal').innerHTML=teaForm(t,true); $('#mask').classList.add('on'); }
+function openEditTea(id){ const t=teas.find(x=>x.id===id); if(!t) return;
+  curBuys = Array.isArray(t.purchases) ? t.purchases.map(x=>{
+    const per=x.per!=null?+x.per:0, n=x.n!=null?+x.n:0, g=x.g!=null?+x.g:Math.round(per*n*10)/10;
+    return {m:x.m||'',price:+(x.price||0),mode:(per&&n)?'bag':'direct',per,n,g};
+  }) : (t.buyDate ? [{m:t.buyDate.slice(0,7),price:+(t.price||0),mode:'bag',per:+(t.weight||0)||0,n:1,g:+(t.weight||0)||0}] : []);
+  $('#modal').innerHTML=teaForm(t,false); $('#mask').classList.add('on'); }
+function saveTea(id,isNew){
+  const get=v=>$('#'+v).value.trim();
+  const cur = (isNew==='true')? null : teas.find(x=>x.id===id);
+  const totalG = totalBuyGrams(curBuys);
+  const w = totalG>0 ? totalG : (cur? (+cur.weight||0) : 0);  // 入库总量=批次克数和；无批次则沿用原值
+  const obj={id,class:get('f_class'),sub:get('f_sub'),variety:get('f_variety'),name:get('f_name'),
+    brand:get('f_brand'),year:get('f_year'),craft:get('f_craft'),weight:w,consumed0:+get('f_consumed0')||0,
+    price:(isNew==='true')?0:(cur?+cur.price||0:0),
+    /* 保留「有月份」或「有实质内容(克数/花费/泡数)」的购买记录；纯空白新增行不入库，
+       但「月份留空、克数已填」的旧库存记录必须保留（用户要求：旧库存自动转一条、月份可空、可改） */
+    purchases: curBuys.filter(p=>{
+      const g=+(p.g||0), price=+(p.price||0), n=+(p.n||0);
+      return (p.m && p.m.length) || g>0 || price>0 || n>0;
+    }).map(p=>({m:(p.m||''),price:+(p.price||0),mode:p.mode||'bag',per:+(p.per||0),n:+(p.n||0),g:+(p.g||0)})),
+    form:'散茶',note:'',noSpend:!($('#f_spend')?$('#f_spend').checked:true)};
+  if(!obj.name){ toast('茶名不能为空'); return; }
+  /* 从账本同步来的茶：完善保存后清除待完善标记 */
+  if(cur && cur.needComplete){ delete obj.needComplete; delete obj.source; }
+  if(isNew==='true'){ teas.push(obj); } else { const i=teas.findIndex(x=>x.id===id); if(i>=0) teas[i]=obj; }
+  save(); closeMask(); render();
+}
+function delTea(id){ askConfirm('确定删除这款茶？', ()=>{ teas=teas.filter(x=>x.id!==id); save(); closeMask(); render(); }, '删除'); }
+
+/* —— 茶样：筛选 / 批量选择 / 批量删除 —— */
+/* —— 加心：收藏 / 单独查看 —— */
+function toggleFavTea(id){
+  const t=teas.find(x=>x.id===id); if(!t) return;
+  t.fav=!t.fav; save();
+  /* 在「我加心的茶」视图里取消收藏：先淡出该卡，再重渲染，避免卡片瞬间消失让人误以为「心不见了」 */
+  if(onlyFav && !t.fav){
+    const card=document.querySelector('.tea[data-id="'+id+'"]');
+    if(card){ card.classList.add('removing'); setTimeout(render,220); return; }
+  }
+  render();
+}
+function toggleFav(){ onlyFav=!onlyFav; render(); }
+
+/* ============ 弹窗：茶具 ============ */
+function wareForm(w,isNew){
+  const isZisha = w.type==='紫砂壶';
+  const rec = isZisha ? (w.recommend||recommendZisha(w).rec) : '';
+  /* 壶型/描述：仅紫砂壶需要；盖碗/保温杯只需材质描述 */
+  const shapeField = isZisha
+    ? `<div class="mrow"><div><label>材质（泥料）</label><input id="w_material" value="${w.material||''}"></div>
+       <div><label>壶型/描述</label><input id="w_shape" value="${w.shape||''}" placeholder="如：西施、石瓢"></div></div>`
+    : `<div><label>材质/描述</label><input id="w_material" value="${w.material||''}" placeholder="${w.type==='盖碗'?'如：白瓷、柴烧':'如：不锈钢、玻璃'}"></div>`;
+  /* 容量：盖碗标注「盖下容量」；紫砂壶必填以生成推荐；保温杯为参考 */
+  const capLabel = w.type==='盖碗' ? '盖下容量(cc)' : '容量(cc)';
+  const capHint = isZisha ? '（必填，用于生成冲泡推荐）' : (w.type==='保温杯' ? '（参考）' : '');
+  const recField = isZisha
+    ? `<label>推荐冲泡（留空按泥料+容量自动）</label><input id="w_recommend" value="${rec}" placeholder="留空将按泥料与容量自动推荐">${!w.recommend?`<div class="hint">自动建议依据：${recommendZisha(w).basis}</div>`:''}`
+    : '';
+  /* 名称：紫砂壶按「泥料·壶型」识别，无需名称；盖碗/保温杯才需要 */
+  const nameField = isZisha
+    ? `<div class="hint">紫砂壶无需名称，按「${w.material||'泥料'}·${w.shape||'壶型'}」识别即可。</div>`
+    : `<label>名称（便于区分，如「120 白瓷盖碗」）</label><input id="w_name" value="${w.name||''}" placeholder="留空则按 类型·材质 显示">`;
+  return `<span class="x" onclick="closeMask()">×</span><h3>${isNew?'添加茶具':'编辑茶具'}</h3>
+  <label>类型</label><select id="w_type" onchange="wareTypeChange('${w.id}','${isNew}')">${['紫砂壶','盖碗','保温杯'].map(t=>`<option ${w.type===t?'selected':''}>${t}</option>`).join('')}</select>
+  ${nameField}
+  ${shapeField}
+  <label>${capLabel}${capHint}</label><input id="w_capacity" value="${w.capacity||''}" placeholder="如：120">
+  ${recField}
+  <label>适合的茶（选填，留空则按上方推荐/不限定）</label><input id="w_suit" value="${w.suit||''}" placeholder="如：岩茶、熟普、老白茶">
+  <div class="acts">${!isNew?`<button class="btn danger" onclick="delWare('${w.id}')">删除</button>`:''}<span style="flex:1"></span>
+    <button class="btn ghost" onclick="closeMask()">取消</button>
+    <button class="btn" onclick="saveWare('${w.id}','${isNew}')">保存</button></div>`;
+}
+function wareTypeChange(id,isNew){
+  const w={ id, type:$('#w_type').value,
+    name:($('#w_name')?$('#w_name').value:''),
+    material:($('#w_material')?$('#w_material').value:''),
+    shape:($('#w_shape')?$('#w_shape').value:''),
+    capacity:($('#w_capacity')?$('#w_capacity').value:''),
+    recommend:($('#w_recommend')?$('#w_recommend').value:''),
+    suit:($('#w_suit')?$('#w_suit').value:'') };
+  $('#modal').innerHTML=wareForm(w,isNew);
+}
+function openAddWare(){ const w={id:Math.random().toString(36).slice(2,10),type:'紫砂壶',name:'',material:'',shape:'',capacity:'',recommend:'',suit:''};
+  $('#modal').innerHTML=wareForm(w,true); $('#mask').classList.add('on'); }
+function openEditWare(id){ const w=wares.find(x=>x.id===id); if(!w) return; $('#modal').innerHTML=wareForm(w,false); $('#mask').classList.add('on'); }
+function saveWare(id,isNew){
+  const get=v=>{ const e=$('#'+v); return e?e.value.trim():''; };
+  const obj={id,type:get('w_type'),name:get('w_name'),material:get('w_material'),shape:get('w_shape'),capacity:get('w_capacity'),recommend:get('w_recommend'),suit:get('w_suit')};
+  if(isNew==='true'){ wares.push(obj); } else { const i=wares.findIndex(x=>x.id===id); if(i>=0) wares[i]=obj; }
+  save(); closeMask(); render();
+}
+function delWare(id){ askConfirm('确定删除这件茶具？', ()=>{ closeMask(); wares=wares.filter(x=>x.id!==id); save(); render(); }, '删除'); }
+
+/* ============ 品鉴记录 ============ */
+function monthSpend(ym){
+  const recs=records.filter(r=>r.date&&r.date.startsWith(ym));
+  recs.sort((a,b)=>(b.date||'').localeCompare(a.date||''));   // 本月品鉴明细按时间倒序，全部列出不做截断
+  const drank=recs.reduce((s,r)=>{ const t=teas.find(x=>x.id===r.teaId); return s+(t?unitPrice(t)*(+r.grams||0):0); },0);
+  const buyList=[], skipList=[];
+  /* noSpend=true 的茶：购买记录不进「花费」统计，单独列出提示，避免误以为漏记 */
+  teas.forEach(t=>{ (t.purchases||[]).forEach(p=>{ if(p&&p.m===ym){ (t.noSpend?skipList:buyList).push({name:t.name,g:p.g,price:p.price}); } }); });
+  const buy=buyList.reduce((s,b)=>s+(+b.price||0),0);
+  const skipSum=skipList.reduce((s,b)=>s+(+b.price||0),0);
+  const ymNice=ym.replace('-','.');
+  if(buy===0 && drank===0 && buyList.length===0 && skipList.length===0 && recs.length===0)
+    return `<div class="mspendwrap"><h4>${ymNice} 花费</h4><div class="hint">本月暂无购买与品鉴记录。点上方「‹ 上个月 / 下个月 ›」可查看其它月份。</div></div>`;
+  const buys=buyList.length?`<div class="msd"><b>本月购入（${buyList.length} 笔）</b><ul>${buyList.map(b=>`<li>${b.name||'茶'} · ${fmt(b.g)}g · ¥${fmt(b.price)}</li>`).join('')}</ul></div>`:'';
+  const skips=skipList.length?`<div class="hint" style="margin:6px 0 0">另有 ${skipList.length} 笔（¥${fmt(skipSum)}）标记为「不计入花费」，未计入上方金额：${skipList.map(b=>b.name||'茶').join('、')}</div>`:'';
+  const drinks=recs.length?`<div class="msd"><b>本月品鉴（${recs.length} 次 · 共 ¥${fmt(drank)}）</b><ul>${recs.map(r=>{
+    const t=teas.find(x=>x.id===r.teaId);
+    const cost=t?unitPrice(t)*(+r.grams||0):0;
+    return `<li>${r.teaName||'茶'} · ${(+r.grams||0)}g${cost?(' · ¥'+fmt(cost)):''}</li>`;
+  }).join('')}</ul></div>`:'';
+  return `<div class="mspendwrap"><h4>${ymNice} 花费</h4>
+    <div class="mgrd">
+      <div class="mspend"><div class="my">购买</div>
+        <div class="m2"><span>金额</span><b>¥${fmt(buy)}</b></div>
+        <div class="m2"><span>笔数</span><b>${buyList.length}</b></div></div>
+      <div class="mspend"><div class="my">喝掉</div>
+        <div class="m2"><span>金额</span><b>¥${fmt(drank)}</b></div>
+        <div class="m2"><span>次数</span><b>${recs.length}</b></div></div>
+    </div>${buys}${skips}${drinks}</div>`;
+}
+function viewTasting(){
+  const fav=topRated();
+  const big=`<div class="bigstat">
+    <div class="bs"><div class="n">${records.length}</div><div class="l">品鉴条数</div></div>
+    <div class="bs"><div class="n">${teas.length}</div><div class="l">茶款</div></div>
+    <div class="bs"><div class="n">${fav.length?fav[0]:'—'}</div><div class="l">最常偏爱</div></div>
+  </div>`;
+  const teaOpts = teas.map(t=>`<option value="${t.id}" ${tastingFilter===t.id?'selected':''}>${t.name}</option>`).join('');
+  const head=`<div class="toolbar">
+      <input id="tastingSearch" type="search" placeholder="搜索茶名 / 品种 / 品牌 / 备注…" value="${tastingQ}" oninput="onTastingSearch(this)" aria-label="搜索品鉴记录">
+    </div>
+    <div class="toolbar" style="margin-top:-2px">
+      <button class="btn" onclick="openTaste(null)">记录品鉴</button>
+      <span class="icsel" style="margin-left:auto">${ICON_FILTER}<select onchange="tastingFilter=this.value;render()" aria-label="按茶筛选"><option value="">全部茶</option>${teaOpts}</select></span>
+    </div>`;
+  return big+head+`<div id="tastingList">${tastingListHTML()}</div>`;
+}
+/* 一条记录是否命中搜索词：茶名优先，同时覆盖该茶的品种/品牌/小类与品鉴文字 */
+function tastingMatch(r,q){
+  if(!q) return true;
+  const t=teas.find(x=>x.id===r.teaId)||{};
+  const hay=[r.teaName,t.name,t.brand,t.variety,t.sub,t.class,r.note,r.aroma,r.taste,r.feel]
+    .filter(Boolean).join(' ').toLowerCase();
+  return hay.indexOf(q)>=0;
+}
+function tastingListHTML(){
+  const q=(tastingQ||'').trim().toLowerCase();
+  let list=[...records].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  if(tastingFilter) list=list.filter(r=>r.teaId===tastingFilter);
+  if(q) list=list.filter(r=>tastingMatch(r,q));
+  if(!list.length){
+    const tip=(tastingFilter||q)?'没有匹配的品鉴记录，换个关键词试试。':'还没有品鉴记录，点上方「记录品鉴」开始吧。';
+    return `<div class="empty">${tip}</div>`;
+  }
+  return `<div class="tlist">${list.map(tasteCard).join('')}</div>`;
+}
+/* 搜索只刷新列表区域，不重建输入框本身（避免中文输入法被打断、连续删除失效） */
+function onTastingSearch(el){ tastingQ=el.value; refreshTastingList(); }
+function refreshTastingList(){ const z=document.getElementById('tastingList'); if(z) z.innerHTML=tastingListHTML(); }
+function viewTastingByTea(id){ tastingFilter=id; view='tasting'; document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.v==='tasting')); render(); }
+function tasteCard(r){
+  const mood=r.mood?`<span class="tmood" title="${MOOD_TXT[r.mood]||''}">${r.mood}</span>`:'';
+  /* 香气 / 滋味 / 体感 / 备注 合成一行文案，不再逐行堆叠 */
+  const parts=[];
+  if(r.aroma) parts.push('香 '+r.aroma);
+  if(r.taste) parts.push('味 '+r.taste);
+  if(r.feel)  parts.push('感 '+r.feel);
+  if(r.note)  parts.push(r.note);
+  const impression = parts.length? `<div class="timp">${parts.join(' · ')}</div>` : '';
+  return `<div class="tcard">
+    <div class="thead"><h3>${r.teaName||'—'}</h3>${mood}<button class="tdel" title="删除" onclick="delRecord('${r.id}')">${ICON_TRASH}</button></div>
+    <div class="tm">${r.date||''}${r.wareName?(' · '+r.wareName):''}${r.grams?(' · '+r.grams+'g'):''}</div>
+    ${impression}
+  </div>`;
+}
+function openTaste(arg, presetDate){
+  const editing = (arg && records.some(r=>r.id===String(arg)));
+  let rec=null, selTea='', selWare='', date='', grams=8, mood='🙂', note='';
+  if(editing){
+    rec=records.find(r=>r.id===String(arg));
+    selTea=rec.teaId||''; selWare=rec.wareId||''; date=rec.date||''; grams=rec.grams||8; mood=rec.mood||'🙂';
+    note=rec.note||''; editingRecId=rec.id;
+  } else {
+    editingRecId=null; selTea = arg||''; date = presetDate || new Date().toISOString().slice(0,10);
+  }
+  tasteSelTea = selTea || '';
+  const selName = editing ? (rec.teaName||'') : (selTea ? ((teas.find(t=>t.id===selTea)||{}).name||'') : '');
+  tasteSelWare = selWare || '';
+  const selWareObj = selWare ? wares.find(w=>w.id===selWare) : null;
+  const selWareName = selWareObj ? (selWareObj.type+'·'+selWareObj.material) : '';
+  /* 用表情记录心情，替代星星评分 */
+  const moodOpt=MOODS.map(e=>`<button type="button" class="mood ${mood===e?'on':''}" title="${MOOD_TXT[e]}" onclick="setMood('${e}')">${e}</button>`).join('');
+  /* 字段顺序：日期 → 茶 → 投茶量+茶具 → 心情 → 备注（香气/滋味/体感已合并进备注） */
+  $('#modal').innerHTML=`<span class="x" onclick="closeMask()">×</span><h3>${editing?'编辑品鉴 / 补录感受':'记录品鉴'}</h3>
+    <label>日期</label>
+    <input id="t_date" type="date" value="${date}">
+    <label>茶（输入茶名搜索，点选即可）</label>
+    <input id="t_tea" value="${selName}" placeholder="输入茶名搜索…" autocomplete="off"
+      oninput="tasteSelTea='';tastePickList(this.value)" onfocus="tastePickList(this.value)">
+    <div class="teapick" id="teapick"></div>
+    <div class="mrow"><div><label>投茶量(g)</label><input id="t_grams" type="number" step="0.5" value="${grams}"></div>
+    <div><label>茶具（可选）</label>
+      <button type="button" class="pickbtn" id="wareBtn" onclick="toggleWarePick()">${selWareName||'不确定就留空'}</button>
+      <div class="teapick" id="warepick" style="display:none">${warePickHTML(tasteSelWare)}</div>
+    </div></div>
+    <label>这次感觉</label>
+    <div class="moods" id="moods">${moodOpt}</div>
+    <input type="hidden" id="t_mood" value="${mood}">
+    <label>备注</label><input id="t_note" value="${note}" placeholder="香气、滋味、体感想记的都写这儿">
+    <div class="acts"><button class="btn ghost" onclick="closeMask()">取消</button>
+      <button class="btn" onclick="saveTaste()">${editing?'保存修改':'保存记录'}</button></div>`;
+  $('#mask').classList.add('on');
+}
+/* 选茶：搜索框 + 实时过滤候选列表（比 datalist 在手机上更好点） */
+function tastePickList(kw){
+  const el=document.getElementById('teapick'); if(!el) return;
+  const k=(kw||'').trim().toLowerCase();
+  const list=teas.filter(t=>!k || ((t.name||'')+' '+(t.class||'')+' '+(t.sub||'')+' '+(t.variety||'')).toLowerCase().includes(k));
+  if(!list.length){ el.innerHTML=`<div class="tpempty">没有匹配的茶</div>`; el.style.display='block'; return; }
+  /* 不截断条数：候选区已限高可滚动，保证每款茶都能翻到 */
+  el.innerHTML=list.map(t=>`<div class="tprow" onclick="tastePick('${t.id}')"><b>${t.name}</b><span>${t.class}${t.sub?('·'+t.sub):''}</span></div>`).join('');
+  el.style.display='block';
+}
+function tastePick(id){
+  const t=teas.find(x=>x.id===id); if(!t) return;
+  tasteSelTea=id;
+  const inp=document.getElementById('t_tea'); if(inp) inp.value=t.name;
+  const el=document.getElementById('teapick'); if(el) el.style.display='none';
+}
+/* 茶具选择：与选茶一致的紧凑自定义下拉，替代原生 select（列表过大不美观） */
+function toggleWarePick(){ const el=document.getElementById('warepick'); if(!el) return; const open=el.style.display!=='none'; el.style.display=open?'none':'block'; if(!open) el.scrollIntoView({block:'nearest'}); }
+function warePickHTML(sel){
+  if(!wares.length) return '<div class="tpempty">还没有茶具，先去「茶具」添加一件</div>';
+  return wares.map(w=>{
+    const name=w.type+' · '+w.material+(w.capacity?(' ('+w.capacity+'cc)'):'');
+    return `<div class="tprow ${w.id===sel?'on':''}" data-id="${w.id}" onclick="pickWare('${w.id}')"><b>${name}</b><span>${w.shape||''}</span></div>`;
+  }).join('');
+}
+function pickWare(id){
+  tasteSelWare=id;
+  const w=wares.find(x=>x.id===id);
+  const name=w?(w.type+' · '+w.material+(w.capacity?(' ('+w.capacity+'cc)'):'')):'';
+  const btn=document.getElementById('wareBtn'); if(btn) btn.textContent=name;
+  const el=document.getElementById('warepick');
+  if(el){ el.style.display='none'; el.querySelectorAll('.tprow').forEach(p=>p.classList.toggle('on',p.dataset.id===id)); }
+}
+function saveTaste(){
+  const raw=($('#t_tea')?$('#t_tea').value:'').trim();
+  /* 优先用候选列表点选的 id；若直接手输完整名字也能匹配 */
+  let t = tasteSelTea ? teas.find(x=>x.id===tasteSelTea) : null;
+  if(!t) t = teas.find(x=>(x.name+'｜'+x.class+'·'+x.sub)===raw) || teas.find(x=>x.name===raw);
+  if(!t){ toast('请先选择一款茶（输入茶名后点候选即可）'); return; }
+  const wId=tasteSelWare; const w=wares.find(x=>x.id===wId);
+  const rec={teaId:t.id, teaName:t.name,
+    wareId:wId, wareName: w? (w.type+'·'+w.material):'', date:$('#t_date')?$('#t_date').value:'',
+    grams:parseFloat($('#t_grams')?$('#t_grams').value:0)||0, rating:0, mood:($('#t_mood')?$('#t_mood').value:'🙂'),
+    note:$('#t_note')?$('#t_note').value.trim():''};   // 香气/滋味/体感已并入备注
+  /* 库存校验：不能超过「当前剩余库存」。
+     编辑已有记录时，rem(t) 里已含本条旧克数，需先加回，得到本次真正可分配的额度 */
+  const oldRec = editingRecId ? records.find(r=>r.id===editingRecId) : null;
+  const oldG = oldRec ? (+oldRec.grams||0) : 0;
+  const avail = rem(t) + oldG;
+  const doSave=()=>{
+    if(editingRecId){
+      const i=records.findIndex(r=>r.id===editingRecId);
+      records[i]={...records[i], ...rec};
+    } else {
+      rec.id='r'+Date.now(); records.unshift(rec);
+    }
+    save(); closeMask(); render();
+  };
+  if(rec.grams>0 && rec.grams>avail+0.001){ askConfirm(overStockMsg(t, avail, rec.grams), doSave, '仍要记录'); return; }
+  doSave();
+}
+function setMood(e){
+  const h=document.getElementById('t_mood'); if(h) h.value=e;
+  document.querySelectorAll('#moods .mood').forEach(b=>b.classList.toggle('on', b.textContent===e));
+}
+function delRecord(id){ askConfirm('删除这条品鉴记录？', ()=>{ records=records.filter(x=>x.id!==id); save(); render(); }, '删除'); }
+
+/* —— 季节小元素：物候图标 · 宜饮建议 —— */
+const SEASON_ICON={
+  春:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V9"/><path d="M12 12c-3 0-5-2-5-5 3 0 5 2 5 5z"/><path d="M12 12c3 0 5-2 5-5-3 0-5 2-5 5z"/></svg>',
+  夏:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3 9q3-3 6 0t6 0 6 0"/><path d="M3 15q3-3 6 0t6 0 6 0"/></svg>',
+  秋:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-7"/><path d="M12 14c0-4-3-7-7-7 0 4 3 7 7 7z"/></svg>',
+  冬:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 3v18"/><path d="M4 7l16 10"/><path d="M20 7L4 17"/></svg>'
+};
+const SEASON_INFO={
+  春:{c:'#7A9A65',tip:'宜饮花茶 · 疏肝生发'},
+  夏:{c:'#4E8C8A',tip:'宜饮绿茶 · 清热消暑'},
+  秋:{c:'#B5642C',tip:'宜饮乌龙 · 润燥生津'},
+  冬:{c:'#8A5A3C',tip:'宜饮红茶 · 暖胃驱寒'}
+};
+function seasonOf(m){ return (m>=3&&m<=5)?'春':(m>=6&&m<=8)?'夏':(m>=9&&m<=11)?'秋':'冬'; }
+
+/* —— 喝茶日历 —— */
+function viewCalendar(){
+  const y=calY, m=calM;
+  const todayStr=new Date().toISOString().slice(0,10);
+  const first=new Date(y,m-1,1).getDay();
+  const days=new Date(y,m,0).getDate();
+  const prefix=y+'-'+String(m).padStart(2,'0');
+  const byDay={};
+  records.filter(r=>r.date && r.date.startsWith(prefix)).forEach(r=>{ (byDay[r.date]=byDay[r.date]||[]).push(r); });
+  const weeks=['日','一','二','三','四','五','六'];
+  let cells='';
+  for(let i=0;i<first;i++) cells+='<div class="calcell blank"></div>';
+  for(let d=1; d<=days; d++){
+    const ds=prefix+'-'+String(d).padStart(2,'0');
+    const evs=byDay[ds]||[];
+    const evHtml=evs.map(r=>{
+      const star=r.mood? `<span class="estar">${r.mood}</span>`:'';
+      const sub=[r.grams?r.grams+'g':'', r.wareName||''].filter(Boolean).join(' · ');
+      return `<div class="calev" onclick="event.stopPropagation();openTaste('${r.id}')" title="点开可补录感受">
+        <div class="et">${r.teaName||'茶'}</div>
+        <div class="es">${sub} ${star}</div></div>`;
+    }).join('');
+    cells+=`<div class="calcell ${ds===todayStr?'today':''}" onclick="openTaste(null,'${ds}')">
+      <span class="dn">${d}</span>
+      <button class="add" title="记这一天喝的茶" onclick="event.stopPropagation();openTaste(null,'${ds}')">+</button>
+      ${evHtml}</div>`;
+  }
+  const S=seasonOf(m);
+  return `
+  <div class="calhead">
+    <div class="ttl"><span class="emo">📅 </span>喝茶日历</div>
+    <div class="seastip" style="color:${SEASON_INFO[S].c}"><i class="si">${SEASON_ICON[S]}</i><span>${lunarGanzhiText()}</span></div>
+    <div class="nav">
+      <button onclick="calShift(-1)" title="上个月">‹<span class="btxt"> 上个月</span></button>
+      <span class="ym">${y} 年 ${m} 月</span>
+      <button onclick="calShift(1)" title="下个月"><span class="btxt">下个月 </span>›</button>
+      <button class="addtoday" onclick="openTaste(null,'${todayStr}')">+ 记今天</button>
+    </div>
+  </div>
+  <div class="calweek">${weeks.map(w=>`<span>${w}</span>`).join('')}</div>
+  <div class="calgrid">${cells}</div>
+  ${monthSpend(prefix)}`;
+}
+function calShift(delta){ const dt=new Date(calY, calM-1+delta, 1); calY=dt.getFullYear(); calM=dt.getMonth()+1; render(); }
+
+/* ============ 交互绑定 ============ */
+function bindView(){
+  if(view==='pick'){
+    if(pickMode==='chat'){
+      if(chatLog.length===0) chatInit(); else chatRender();
+    } else {
+      document.querySelectorAll('#optSeason button,#optTime button,#optScene button,#optClass button')
+        .forEach(b=>b.onclick=()=>{ p[b.dataset.k]=b.dataset.v; render(); renderPickResult(); });
+      renderPickResult();
+    }
+  }
+}
+function toggleClass(c){ activeClass = (activeClass===c)?'':c; activeSub=''; view='stock'; render();
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.v==='stock')); }
+function toggleSub(s){ activeSub = (activeSub===s)?'':s; refreshStockList(); }
+
+function closeMask(){ $('#mask').classList.remove('on'); }
+$('#mask').addEventListener('click',e=>{ if(e.target.id==='mask') closeMask(); });
+
+document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>{
+  view=b.dataset.v; document.querySelectorAll('#nav button').forEach(x=>x.classList.toggle('on',x===b));
+  render();
+});
+
+/* ============ 备份与同步（零配置，微信也可用） ============ */
+/* 数据存在各 App 各自的 localStorage，互不通用；用「同步链接 / 备份码」在设备间搬运整份数据 */
+function b64encode(s){ return btoa(unescape(encodeURIComponent(s))); }
+function b64decode(b){ return decodeURIComponent(escape(atob(b))); }
+/* URL 安全 base64：把 + / = 换成 - _ 并去掉尾部 =，可直接拼进 ?d= 而不被 URL 编码膨胀（链接更短、更干净） */
+function b64url(s){ return b64encode(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+function b64urlToStd(b){ b=b.replace(/-/g,'+').replace(/_/g,'/'); while(b.length%4) b+='='; return b; }
+/* 规范化序列化：递归按 key 排序，保证「与种子相同」的判断稳定（不受字段顺序影响） */
+function stableStr(o){
+  if(Array.isArray(o)) return '['+o.map(stableStr).join(',')+']';
+  if(o && typeof o==='object') return '{'+Object.keys(o).sort().map(k=>JSON.stringify(k)+':'+stableStr(o[k])).join(',')+'}';
+  return JSON.stringify(o);
+}
+/* 基线：用与启动时相同的迁移逻辑，对 SEED 做一遍「规范化 + 补默认值」，
+   得到「全新种子」应有的规范形态。导出时只对比当前数据与基线，避免被自动填充字段误判。 */
+function baselineTeas(){
+  const t = JSON.parse(JSON.stringify(SEED.teas)).map(normalizeTea);
+  const seedByName={}; SEED.teas.forEach(x=>{ if(x.name) seedByName[x.name.trim()]=x; });
+  const seedById={}; SEED.teas.forEach(x=>{ if(x.id) seedById[x.id]=x; });
+  t.forEach(tt=>{
+    if(tt.consumed0===undefined){ const o=seedByName[(tt.name||'').trim()]; tt.consumed0=(o&&o.consumed0!==undefined)?o.consumed0:(tt.consumed||0); }
+    if('consumed' in tt) delete tt.consumed;
+    const w=+tt.weight; if(!tt.weight||isNaN(w)||w<=0) tt.weight=(seedById[tt.id]&&seedById[tt.id].weight>0)?seedById[tt.id].weight:tt.weight;
+    const legacy=!Array.isArray(tt.purchases)||tt.purchases.length===0;
+    if(legacy){ if((+tt.weight||0)>0){ const m=(tt.buyDate&&tt.buyDate.length>=7)?tt.buyDate.slice(0,7):''; tt.purchases=[{m,price:+(tt.price||0)||0,mode:'direct',per:0,n:0,g:+(tt.weight||0)||0}]; } else { tt.purchases=[]; } }
+    if((!tt.buyDate||tt.buyDate.length<7)&&Array.isArray(tt.purchases)){ tt.purchases=tt.purchases.map(p=>({...p,m:(p.m&&p.m.length>=7)?p.m:(p.m?p.m.slice(0,7):'')})); }
+  });
+  return t;
+}
+/* 导出：只带「与基线不同的茶 / 茶具」+ 全部冲泡记录 → 体积极小，微信复制也不易截断 */
+function currentData(opts){
+  opts=opts||{};
+  const base=baselineTeas(); const bmap={}; base.forEach(t=>bmap[t.id]=t);
+  const teasDiff = teas.filter(t=>{ const s=bmap[t.id]; return !s || stableStr(s)!==stableStr(t); });
+  const wbase=JSON.parse(JSON.stringify(SEED.wares)); const wmap={}; wbase.forEach(w=>wmap[w.id]=w);
+  const waresDiff = wares.filter(w=>{ const s=wmap[w.id]; return !s || stableStr(s)!==stableStr(w); });
+  return {fmt:'diff', v:3, exportedAt:new Date().toISOString(), teas:teasDiff, wares:waresDiff, records:opts.noRecords?[]:records};
+}
+/* 把备份数据解析成本地可写入的数据（支持 diff 增量 与 旧版 full 全量两种格式） */
+function resolveData(d){
+  if(d && d.fmt==='diff'){
+    const teas2=JSON.parse(JSON.stringify(SEED.teas));
+    (d.teas||[]).forEach(t=>{ const i=teas2.findIndex(x=>x.id===t.id); if(i>=0) teas2[i]=t; else teas2.push(t); });
+    const wares2=JSON.parse(JSON.stringify(SEED.wares));
+    (d.wares||[]).forEach(w=>{ const i=wares2.findIndex(x=>x.id===w.id); if(i>=0) wares2[i]=w; else wares2.push(w); });
+    return {teas:teas2, wares:wares2, records:Array.isArray(d.records)?d.records:[]};
+  }
+  return {teas:d.teas, wares:Array.isArray(d.wares)?d.wares:JSON.parse(JSON.stringify(SEED.wares)), records:Array.isArray(d.records)?d.records:[]};
+}
+
+function copyText(txt){
+  /* 优先 clipboard API；失败时回退 execCommand（微信 WebView 更可靠） */
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    return navigator.clipboard.writeText(txt).then(()=>true).catch(()=>fallbackCopy(txt));
+  }
+  return Promise.resolve(fallbackCopy(txt));
+}
+function fallbackCopy(txt){
+  try{ const ta=document.createElement('textarea'); ta.value=txt; ta.style.position='fixed'; ta.style.top='-9999px';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    const ok=document.execCommand('copy'); ta.remove(); return ok;
+  }catch(e){ return false; }
+}
+
+function openSync(){
+  const html=`<span class="x" onclick="closeMask()">×</span>
+  <h3>备份与同步</h3>
+  <p style="font-size:13px;color:var(--sub);margin:0 0 14px;line-height:1.65">
+    数据按「链接」隔离：每个链接各存一份，互不通用。<br>
+    <b style="color:var(--red)">搬数据：先在「有数据的旧链接」里点「生成同步链接 / 备份码」，再到「新链接」打开链接或粘贴导入即可。</b></p>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:4px">
+    <button class="btn ghost sm" onclick="genSyncLink()">生成同步链接</button>
+    <button class="btn ghost sm" onclick="genBackupCode()">生成备份码</button>
+    <button class="btn ghost sm" onclick="genTeaExpense()">导出本月茶叶支出</button>
+    <button class="btn ghost sm" onclick="exportJson()">导出数据(JSON)</button>
+  </div>
+  <div style="font-size:12px;color:var(--sub);margin:0 0 8px">
+    <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer">
+      <input type="checkbox" id="incRecords" checked> 含冲泡记录（取消勾选可大幅缩短链接，仅同步茶叶/茶具）
+    </label>
+  </div>
+  <div id="syncOut"></div>
+  <hr style="border:none;border-top:1px solid var(--line);margin:16px 0">
+  <h3 style="font-size:15px">从备份码导入</h3>
+  <textarea id="codeIn" placeholder="把另一台设备生成的「备份码」粘贴到这里" style="width:100%;height:72px;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font-size:13px;resize:vertical"></textarea>
+  <div class="acts" style="margin-top:10px">
+    <button class="btn ghost sm" onclick="importData()">选择文件导入</button>
+    <button class="btn primary sm" onclick="importFromCode()">导入备份码</button>
+  </div>`;
+  $('#modal').innerHTML=html; $('#mask').classList.add('on');
+}
+function emitSync(kind){
+  const noRec = kind==='link' && !($('#incRecords')&&$('#incRecords').checked);
+  /* 链接用 URL 安全 base64（省去 URL 编码膨胀）；备份码用标准 base64（直接 importFromCode 兼容） */
+  const code = kind==='link' ? b64url(JSON.stringify(currentData({noRecords:noRec})))
+                             : b64encode(JSON.stringify(currentData({noRecords:false})));
+  const out=$('#syncOut'); if(!out) return;
+  if(kind==='link'){
+    const link=location.origin+location.pathname+'?d='+code;
+    let tip='';
+    if(link.length>8000) tip='<div class="hint">冲泡记录较多，此链接偏长。发送时若被截断，请改用「生成备份码」（纯文本，不受链接长度限制），或取消「含冲泡记录」只搬库存。</div>';
+    out.innerHTML=`<label>同步链接（在另一设备浏览器打开即自动载入）${noRec?' · 仅库存':''}</label>
+      <input id="syncVal" readonly value="${link.replace(/"/g,'&quot;')}" style="width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font-size:12px">
+      <button class="btn primary sm" style="margin-top:8px" onclick="doCopy('syncVal','链接已复制')">复制链接</button>${tip}`;
+  } else {
+    out.innerHTML=`<label>备份码（长按或点「复制」，发到微信 / 文件传输助手）</label>
+      <textarea id="syncVal" readonly style="width:100%;height:96px;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font-size:11px;word-break:break-all">${code}</textarea>
+      <button class="btn primary sm" style="margin-top:8px" onclick="doCopy('syncVal','备份码已复制')">复制备份码</button>`;
+  }
+}
+function genSyncLink(){ emitSync('link'); }
+function genBackupCode(){ emitSync('code'); }
+/* 导出本月茶叶采购支出：生成支出码，粘贴到「家庭小仓库」即可计入家庭账本 */
+function teaMonthExpense(m){
+  let total=0; const rows=[];
+  (teas||[]).forEach(t=>{
+    if(t.noSpend) return;   // 标记「不计入花费」的茶不导出支出
+    (t.purchases||[]).forEach(p=>{
+      if((p.m||'')===m){ const amt=+p.price||0; if(amt>0){ total+=amt; rows.push({name:t.name,amount:Math.round(amt*100)/100}); } }
+    });
+  });
+  return {month:m,amount:Math.round(total*100)/100,items:rows};
+}
+function genTeaExpense(){
+  const out=$('#syncOut'); if(!out) return;
+  const mo=new Date().toISOString().slice(0,7);
+  const months=[]; for(let i=0;i<6;i++){ const d=new Date(); d.setDate(1); d.setMonth(d.getMonth()-i); months.push(d.toISOString().slice(0,7)); }
+  out.innerHTML='<label>导出茶叶采购支出（计入「家庭小仓库」账本）</label>'+
+    '<select id="teExpMonth" style="width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font-size:13px;margin-top:6px">'+
+    months.map(m=>'<option value="'+m+'">'+m+'</option>').join('')+'</select>'+
+    '<div class="acts" style="margin-top:10px"><button class="btn primary sm" onclick="emitTeaExpense()">生成支出码</button></div>'+
+    '<div id="teExpOut" style="margin-top:10px"></div>';
+}
+function emitTeaExpense(){
+  const m=$('#teExpMonth')?$('#teExpMonth').value:new Date().toISOString().slice(0,7);
+  const d=teaMonthExpense(m);
+  if(!d.amount){ toast(m+' 没有茶叶采购记录'); return; }
+  const code=b64encode(JSON.stringify({fmt:'tea-expense',month:d.month,amount:d.amount,items:d.items}));
+  const o=$('#teExpOut'); if(!o) return;
+  o.innerHTML='<div class="hint">'+m+' 共 '+d.amount+' 元（'+d.items.length+' 笔）。复制后到「家庭小仓库 → 设置 → 导入茶叶支出」粘贴。</div>'+
+    '<textarea id="teExpVal" readonly style="width:100%;height:70px;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font-size:11px;word-break:break-all;margin-top:6px">'+code+'</textarea>'+
+    '<button class="btn primary sm" style="margin-top:8px" onclick="doCopy(\'teExpVal\',\'支出码已复制\')">复制支出码</button>';
+}
+function doCopy(id,msg){
+  const el=document.getElementById(id); if(!el) return;
+  copyText(el.value!==undefined?el.value:el.textContent).then(ok=>{
+    toast(ok?(msg||'已复制'):'复制失败，请手动长按选择复制');
+  });
+}
+function importFromCode(){
+  const v=($('#codeIn').value||'').trim();
+  if(!v){ toast('请先粘贴备份码'); return; }
+  let d; try{ d=JSON.parse(b64decode(v)); }catch(e){ toast('备份码无法解析，请确认完整复制'); return; }
+  applyData(d,'备份码');
+}
+function applyData(d,src){
+  if(!d){ toast((src||'数据')+'格式有误'); return; }
+  let r;
+  const isRaw = d && typeof d==='object' && !Array.isArray(d) && !d.fmt && !Array.isArray(d.teas)
+                && Object.keys(d).some(k=>k.indexOf('tea_')===0);
+  if(isRaw){
+    /* 整份 localStorage 原始导出（书签小程序）：直接取各键的 JSON 文本还原 */
+    const t=d['tea_teas_v3']||d['tea_teas_v2'];
+    const w=d['tea_wares_v3']||d['tea_wares_v2'];
+    const rec=d['tea_tastings_v3']||d['tea_records_v3']||d['tea_tastings_v2']||d['tea_records_v2'];
+    r={ teas: t?JSON.parse(t):JSON.parse(JSON.stringify(SEED.teas)),
+        wares: w?JSON.parse(w):JSON.parse(JSON.stringify(SEED.wares)),
+        records: rec?JSON.parse(rec):[] };
+  } else if(Array.isArray(d.teas)){
+    r=resolveData(d);
+  } else { toast((src||'数据')+'格式有误'); return; }
+  const doApply=()=>{
+    teas=r.teas; wares=r.wares; records=r.records;
+    save(); render(); closeMask();
+    toast('已从'+src+'载入：'+teas.length+' 款茶 · '+wares.length+' 件茶具 · '+records.length+' 条记录');
+  };
+  if(teas && teas.length){ askConfirm('将从「'+src+'」载入数据，覆盖当前设备已有的 '+teas.length+' 款茶。继续？', doApply, '继续'); return; }
+  doApply();
+}
+function exportData(){ openSync(); }   /* 原文件导出入口改走同步面板（微信也能用） */
+function exportJson(){
+  try{
+    const data=currentData({noRecords:false});
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    const a=document.createElement('a');
+    const ts=new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+    a.href=URL.createObjectURL(blob);
+    a.download='珍珠的茶室-数据备份-'+ts+'.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+    toast('数据已导出为 JSON 文件');
+  }catch(e){ toast('导出失败：'+(e.message||e)); }
+}
+function importData(){ $('#fileInput').click(); }
+function doImport(e){ const f=e.target.files[0]; if(!f) return; const r=new FileReader();
+  r.onload=()=>{ try{
+      const d=JSON.parse(r.result);
+      if(!d || !Array.isArray(d.teas)) throw new Error('缺少茶叶数据');
+      const rr=resolveData(d);
+      teas=rr.teas; wares=rr.wares; records=rr.records;      // 关键：记录一并恢复，已喝才不会丢
+      save(); render();
+      toast('导入成功：'+teas.length+' 款茶 · '+wares.length+' 件茶具 · '+records.length+' 条记录');
+    }
+  catch(err){ toast('文件格式有误：'+(err.message||err)); } }; r.readAsText(f); e.target.value=''; }
+function resetData(){ askConfirm('恢复初始数据将覆盖当前改动（含所有冲泡记录），确定？', ()=>{ teas=JSON.parse(JSON.stringify(SEED.teas)); wares=JSON.parse(JSON.stringify(SEED.wares)); records=[]; save(); render(); }, '确定'); }
+
+/* ============ 启动 ============ */
+/* 全局错误浮层：万一某个交互在浏览器里静默报错（点击“无反应”却看不到原因），
+   这里把错误显示出来，方便定位（不影响正常使用） */
+window.addEventListener('error',e=>{
+  let b=document.getElementById('errbox');
+  if(!b){ b=document.createElement('div'); b.id='errbox';
+    b.style.cssText='position:fixed;left:12px;bottom:12px;max-width:90vw;z-index:999;background:#b5462f;color:#fff;font:12px/1.5 sans-serif;padding:10px 14px;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.25)';
+    document.body.appendChild(b); }
+  b.textContent='⚠ 出错：'+(e.message||e.error)+(e.lineno?('（行 '+e.lineno+'）'):'');
+  setTimeout(()=>{ if(b&&b.parentNode) b.remove(); }, 9000);
+});
+/* 报头右侧：每日一语（节气 / 节日 / 小语），如「白露 · 清风至，白露生」 */
+(function(){
+  const el=document.getElementById('hSeason'); if(!el) return;
+  const d=new Date();
+  el.textContent=dailyText();
+  el.title=dateLabel(d);
+})();
+const _hadUrlData = /[?&]d=/.test(location.search||'');
+/* 同步链接自动载入：打开带 ?d= 的链接即把数据导入当前设备（用 query 而非 hash，避免被托管平台根路径规范化时丢弃）
+   支持两种格式：
+   ① 紧凑增量/全量（{fmt:'diff'|'full', teas,wares,records}）—— 本 App「生成同步链接/备份码」产出；
+   ② 整份 localStorage 原始导出（{tea_teas_v3:'…', …}）—— 旧链接书签小程序导出：原样写回后重载，由正常启动逻辑读取 */
+(function(){
+  const m=(location.search||'').match(/[?&]d=([^&]+)/);
+  if(!m) return;
+  try{
+    let raw=m[1];
+    if(raw.indexOf('%')>=0) raw=decodeURIComponent(raw); /* 兼容旧版 encodeURIComponent 链接 */
+    const d=JSON.parse(b64decode(b64urlToStd(raw)));      /* 新版 base64url（-_ 无 %） */
+    const isRaw = d && typeof d==='object' && !Array.isArray(d) && !d.fmt && !Array.isArray(d.teas)
+                  && Object.keys(d).some(k=>k.indexOf('tea_')===0);
+    if(isRaw){
+      Object.keys(d).forEach(k=>{ try{ localStorage.setItem(k, d[k]); }catch(e){} });
+      /* 兼容更早的 v2 键名 */
+      if(!localStorage.getItem('tea_teas_v3')){
+        const t=d['tea_teas_v2'], w=d['tea_wares_v2'], r=d['tea_tastings_v2']||d['tea_records_v2'];
+        if(t) localStorage.setItem('tea_teas_v3', t);
+        if(w) localStorage.setItem('tea_wares_v3', w);
+        if(r) localStorage.setItem('tea_tastings_v3', r);
+      }
+      history.replaceState(null,'',location.pathname);
+      location.reload();
+      return;
+    }
+    if(d && Array.isArray(d.teas)){
+      const r=resolveData(d);
+      teas=r.teas; wares=r.wares; records=r.records;
+      save();
+      history.replaceState(null,'',location.pathname);
+      setTimeout(()=>toast('已从同步链接载入数据：'+teas.length+' 款茶 · '+records.length+' 条记录'),300);
+    }
+  }catch(e){ /* 无效参数，忽略 */ }
+})();
+
+(async function initApp(){
+  /* 先用 localStorage 立即渲染，不等云端，消除白屏延迟 */
+  render();
+
+  if(_hadUrlData) return; /* URL 参数已处理，云端会异步更新 */
+
+  const { data:{ session } } = await _SUPA.auth.getSession();
+  if(!session){
+    document.getElementById('loginOverlay').style.display='flex';
+    return;
+  }
+  const { data } = await _SUPA.from('store').select('key,value').eq('user_id',session.user.id);
+  if(data?.length){
+    const m = Object.fromEntries(data.map(r=>[r.key,r.value]));
+    if(m.teas)    teas    = m.teas;
+    if(m.wares)   wares   = m.wares;
+    if(m.records) records = m.records;
+    try{
+      localStorage.setItem(STORE_T,JSON.stringify(teas));
+      localStorage.setItem(STORE_W,JSON.stringify(wares));
+      localStorage.setItem(STORE_R,JSON.stringify(records));
+    }catch(e){}
+    render(); /* 云端数据到了，静默刷新 */
+  } else {
+    _syncCloud(); /* 首次登录：把本机现有数据上传到云端 */
+  }
+})();
+
+async function doLogin(){
+  const email = document.getElementById('loginEmail').value.trim();
+  const pwd   = document.getElementById('loginPwd').value;
+  const errEl = document.getElementById('loginErr');
+  const btn   = document.getElementById('loginBtn');
+  errEl.style.display='none';
+  btn.disabled=true; btn.textContent='登录中…';
+  const { error } = await _SUPA.auth.signInWithPassword({ email, password:pwd });
+  if(error){
+    errEl.textContent = error.message==='Invalid login credentials'?'邮箱或密码错误':error.message;
+    errEl.style.display='block';
+    btn.disabled=false; btn.textContent='登录';
+    return;
+  }
+  document.getElementById('loginOverlay').style.display='none';
+  render(); /* 登录后立即渲染本机数据 */
+  const { data:{ session } } = await _SUPA.auth.getSession();
+  const { data } = await _SUPA.from('store').select('key,value').eq('user_id',session.user.id);
+  if(data?.length){
+    const m = Object.fromEntries(data.map(r=>[r.key,r.value]));
+    if(m.teas)    teas    = m.teas;
+    if(m.wares)   wares   = m.wares;
+    if(m.records) records = m.records;
+    try{
+      localStorage.setItem(STORE_T,JSON.stringify(teas));
+      localStorage.setItem(STORE_W,JSON.stringify(wares));
+      localStorage.setItem(STORE_R,JSON.stringify(records));
+    }catch(e){}
+    render(); /* 云端数据到了，静默刷新 */
+  } else {
+    await _syncCloud(); /* 首次登录：上传本机现有数据 */
+  }
+}
+
+async function doSignup(){
+  const email = document.getElementById('loginEmail').value.trim();
+  const pwd   = document.getElementById('loginPwd').value;
+  const errEl = document.getElementById('loginErr');
+  errEl.style.display='none';
+  if(!email || pwd.length<6){
+    errEl.style.color='#b5462f';
+    errEl.textContent='请填写邮箱和至少 6 位密码';
+    errEl.style.display='block'; return;
+  }
+  const { error } = await _SUPA.auth.signUp({ email, password:pwd });
+  if(error){ errEl.style.color='#b5462f'; errEl.textContent=error.message; errEl.style.display='block'; return; }
+  errEl.style.color='#5b8c4a';
+  errEl.textContent='注册成功！请查收验证邮件，点击验证后即可登录。';
+  errEl.style.display='block';
+}
+
+/* 不注册 service worker：微信 WebView 的 SW 缓存会锁死旧页面、无法更新。
+   改为纯网络加载，每次打开都是最新。防御性注销本源已存在的旧 SW。 */
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister())).catch(()=>{});
+}
+</script>
+</body>
+</html>
