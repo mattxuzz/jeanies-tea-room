@@ -211,6 +211,8 @@ button{cursor:pointer;border:none;background:none}
 .sub-tea{display:flex;align-items:center;gap:3px;border:1px solid #EBD9C4;border-radius:11px;padding:7px 9px;background:#FFF7EC;color:#B8873F;font-size:11px;font-weight:700}
 .sub-tea .ic{width:13px;height:13px}
 .chip-p.add{border-style:dashed;color:var(--pink);background:transparent}
+.backup-btns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.backup-btns .sbtn{justify-content:center;width:100%;min-height:38px;padding:8px 4px;white-space:nowrap}
 .cloud-box{border:1.5px solid #E7E0EC;border-radius:14px;padding:12px;margin:14px 0;background:#F9F6FD}
 .cloud-t{font-size:12px;font-weight:800;color:#6E5CB0;margin-bottom:6px}
 .cloud-s{font-size:11px;color:#8B7B74}
@@ -218,6 +220,8 @@ button{cursor:pointer;border:none;background:none}
 .cat-manage-row .ic{width:15px;height:15px;vertical-align:-3px;margin-right:5px}
 .cat-manage-row small{color:var(--ink2);font-weight:500;font-size:11px;margin-left:5px}
 .mini-del{border:none;background:var(--pink-l);color:var(--pink-d);border-radius:9px;padding:5px 11px;font-size:11px;font-weight:700}
+.stock-filter{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+.stock-filter .chip-p{font-size:11px;padding:6px 12px}
 .stock-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
 .ss-cell{background:var(--card);border-radius:14px;padding:9px 6px;text-align:center;box-shadow:0 2px 10px rgba(120,90,80,.05)}
 .ss-cell .v{font-size:19px;font-weight:800;color:var(--pink)}
@@ -351,6 +355,7 @@ button{cursor:pointer;border:none;background:none}
 <symbol id="i-out" viewBox="0 0 24 24"><path d="M12 3.5v12M8.5 11.5 12 15.5l3.5-4M5 19.5h14"/></symbol>
 <symbol id="i-gift" viewBox="0 0 24 24"><rect x="3.5" y="9" width="17" height="11" rx="1.6"/><path d="M3.5 13.5h17M12 9v11"/><path d="M12 9C9 9 7 8 7 6.3 7 5 8 4.3 9 4.7c1.5.6 2.4 2.6 3 4.3M12 9c3 0 5-1 5-2.7 0-1.3-1-2-2-1.6-1.5.6-2.4 2.6-3 4.3"/></symbol>
 <symbol id="i-receipt" viewBox="0 0 24 24"><path d="M6 3.5h12v17l-2-1.4-2 1.4-2-1.4-2 1.4-2-1.4-2 1.4z"/><path d="M9 8h6M9 12h6"/></symbol>
+<symbol id="i-box" viewBox="0 0 24 24"><path d="M4 8.5h16v11H4z"/><path d="M4 8.5 6.5 4h11L20 8.5M9.5 8.5V13h5V8.5"/></symbol>
 <symbol id="i-basket" viewBox="0 0 24 24"><path d="M3.5 9h17l-1.8 10.5H5.3z"/><path d="M8 9 12 3.5 16 9M9.5 12.5v4M14.5 12.5v4"/></symbol>
 <symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 3c3.3 4 6.3 7.4 6.3 11a6.3 6.3 0 0 1-12.6 0C5.7 10.4 8.7 7 12 3z"/></symbol>
 <symbol id="i-bus" viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="14" rx="2.4"/><path d="M5 11h14M8 21v-3.5M16 21v-3.5M8.5 14h.01M15.5 14h.01"/></symbol>
@@ -385,7 +390,7 @@ button{cursor:pointer;border:none;background:none}
         <div class="hd-sub" id="hdSub">记录每一笔幸福</div>
       </div>
       <div class="hd-tools">
-        <button class="ic-btn" onclick="go('stock')" title="消耗品库存"><svg class="ic"><use href="#i-basket"/></svg></button>
+        <button class="ic-btn" onclick="go('stock')" title="仓库"><svg class="ic"><use href="#i-box"/></svg></button>
         <button class="ic-btn" onclick="openSettings()" title="设置与备份"><svg class="ic"><use href="#i-gear"/></svg></button>
         <button class="ic-btn" onclick="openCats()" title="分类管理"><svg class="ic"><use href="#i-tag"/></svg></button>
       </div>
@@ -501,13 +506,13 @@ button{cursor:pointer;border:none;background:none}
     </div>
   </div>
   <div class="hint" style="margin-top:18px;text-align:center">登录后数据自动上云，换设备也能看到</div>
-  <div class="row" style="margin-top:10px">
-    <button class="sbtn ghost" onclick="copyBackup()"><svg class="ic sm"><use href="#i-download"/></svg>复制备份</button>
-    <button class="sbtn ghost" onclick="exportData()"><svg class="ic sm"><use href="#i-download"/></svg>下载文件</button>
-    <button class="sbtn ghost" onclick="document.getElementById('impFile').click()" style="margin-top:8px"><svg class="ic sm"><use href="#i-upload"/></svg>文件导入</button>
+  <div class="backup-btns">
+    <button class="sbtn ghost" onclick="copyBackup()">复制备份</button>
+    <button class="sbtn ghost" onclick="exportData()">下载文件</button>
+    <button class="sbtn ghost" onclick="document.getElementById('impFile').click()">文件导入</button>
   </div>
-  <div class="fld" style="margin-top:14px"><label>从小程序迁移：粘贴备份文本</label>
-    <textarea id="pasteImport" class="input" rows="3" placeholder="在小程序「设置 → 导出备份」复制内容，粘贴到这里"></textarea>
+  <div class="fld" style="margin-top:14px">
+    <textarea id="pasteImport" class="input" rows="3" placeholder="粘贴备份文本，导入并同步到云端"></textarea>
     <button class="sbtn ghost" style="margin-top:8px;width:100%" onclick="importPasted()">粘贴导入并同步到云端</button>
   </div>
   <input type="file" id="impFile" accept="application/json" style="display:none" onchange="importData(event)">
@@ -730,7 +735,7 @@ function migrateKey(map,oldK,newK){if(oldK===newK)return;if(map[oldK]!==undefine
 let ui={page:'home',homeYM:ymNow(),billYM:ymNow(),
   repDim:'total',repYM:ymNow(),repYear:new Date().getFullYear(),
   addType:'expense',addBig:'',addSub:'',editId:null,saveEdit:null,
-  ce:{scope:'',parent:'',oldName:'',icon:'home'}};
+  ce:{scope:'',parent:'',oldName:'',icon:'home'},stockFilter:'全部'};
 function go(page){
   ui.page=page;
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
@@ -755,7 +760,7 @@ function shiftRepYM(d){ui.repYM=shiftYM(ui.repYM,d);ui.repYear=+ui.repYM.split('
 function shiftYM(ym,d){let[y,m]=ym.split('-').map(Number);m+=d;if(m<1){m=12;y--;}if(m>12){m=1;y++;}return y+'-'+pad(m);}
 function renderMo(){
   const bar=document.getElementById('moBar');
-  if(ui.page==='bills'||ui.page==='report'){bar.innerHTML='';bar.style.display='none';return;}
+  if(ui.page==='bills'||ui.page==='report'||ui.page==='stock'){bar.innerHTML='';bar.style.display='none';return;}
   bar.style.display='';
   const ym=ui.homeYM,[y,m]=ym.split('-');
   bar.innerHTML=`<button onclick="shiftHome(-1)">${ic('left','sm')}</button><div class="mo-label">${y} 年 ${+m} 月</div><button onclick="shiftHome(1)">${ic('right','sm')}</button>`;
@@ -824,6 +829,7 @@ function stockItemHtml(p){
     <div class="stock-btns"><button class="sbtn ghost" onclick="editStock('${p.id}')">编辑</button></div>
   </div>`;
 }
+function pickStockFilter(c){ui.stockFilter=c;renderStock();}
 function renderStock(){
   const all=DATA.stock||[],ym=ymNow();
   const inMonth=all.filter(x=>ymOf({date:x.added})===ym).length;
@@ -831,7 +837,7 @@ function renderStock(){
   const current=all.filter(x=>!x.used).length;
   let h=`<div class="sub-hd">
     <button class="sub-back" onclick="go('home')">${ic('left')}</button>
-    <div class="sub-title">消耗品库存</div>
+    <div class="sub-title">仓库</div>
     <button class="sub-tea" onclick="openTeaRoom()">${ic('drop','sm')}茶室</button>
     <button class="sub-cats" onclick="openStockCats()">${ic('tag','sm')}分类</button>
     <button class="sub-add" onclick="editStock()">${ic('plus','sm')}添加</button>
@@ -840,21 +846,25 @@ function renderStock(){
     <div class="ss-cell"><div class="v">${inMonth}</div><div class="l">本月入库</div></div>
     <div class="ss-cell"><div class="v">${usedMonth}</div><div class="l">本月用完</div></div>
     <div class="ss-cell"><div class="v">${current}</div><div class="l">当前库存</div></div>
-  </div>`;
+  </div>
+  <div class="stock-filter">${['全部'].concat(stockCats()).map(c=>
+    `<div class="chip-p ${ui.stockFilter===c?'on':''}" onclick="pickStockFilter('${esc(c)}')">${esc(c)}</div>`).join('')}</div>`;
+  // 按筛选过滤
+  const shown=(ui.stockFilter&&ui.stockFilter!=='全部')?all.filter(x=>(x.cat||'其他')===ui.stockFilter):all;
   // 已过期 / 临期 分开两个框（均未用完、有有效期）
-  const expired=all.filter(x=>!x.used&&x.expire&&daysLeft(x.expire)<0)
+  const expired=shown.filter(x=>!x.used&&x.expire&&daysLeft(x.expire)<0)
     .sort((a,b)=>(a.expire||'').localeCompare(b.expire||''));
-  const soon=all.filter(x=>!x.used&&x.expire&&daysLeft(x.expire)>=0&&daysLeft(x.expire)<=7)
+  const soon=shown.filter(x=>!x.used&&x.expire&&daysLeft(x.expire)>=0&&daysLeft(x.expire)<=7)
     .sort((a,b)=>(a.expire||'').localeCompare(b.expire||''));
   if(expired.length)h+=`<div class="expiry-alert over"><div class="ea-t">${ic('sparkle')} 已过期 · ${expired.length} 件</div>
     ${expired.map(p=>`<div class="ea-row" onclick="editStock('${p.id}')"><span>${esc(p.name)}</span>${expTag(p.expire)}</div>`).join('')}</div>`;
   if(soon.length)h+=`<div class="expiry-alert"><div class="ea-t">${ic('sparkle')} 即将过期 · ${soon.length} 件</div>
     ${soon.map(p=>`<div class="ea-row" onclick="editStock('${p.id}')"><span>${esc(p.name)}</span>${expTag(p.expire)}</div>`).join('')}</div>`;
-  if(!all.length)h+=emptyBox('库存空空的','记账时勾选「同时入库」\n或点右上角「添加」手动录入');
+  if(!shown.length)h+=emptyBox('库存空空的','记账时勾选「同时入库」\n或点右上角「添加」手动录入');
   else{
     // 按分类分组（未用完在前）
     const groups={};
-    all.slice().sort((a,b)=>(a.used?1:0)-(b.used?1:0)).forEach(p=>{
+    shown.slice().sort((a,b)=>(a.used?1:0)-(b.used?1:0)).forEach(p=>{
       const c=p.cat||'其他';(groups[c]=groups[c]||[]).push(p);
     });
     stockCats().concat(Object.keys(groups).filter(c=>stockCats().indexOf(c)<0)).forEach(c=>{
