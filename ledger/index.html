@@ -650,11 +650,11 @@ function saveLocalOnly(){try{localStorage.setItem(KEY,JSON.stringify(DATA));}cat
 /* ============ 茶室打通（同域名共享 localStorage）============ */
 const TEA_STORE='tea_teas_v3';
 function loadTeas(){try{const v=localStorage.getItem(TEA_STORE);return v?JSON.parse(v):[];}catch(e){return [];}}
-/* 跳转珍珠的茶室：部署在同源根路径 */
-const TEA_ROOM_URL='/';
+/* 跳转珍珠的茶室：部署在同源仓库根路径（../ 从 /ledger/ 回到仓库根） */
+const TEA_ROOM_URL='../';
 function openTeaRoom(){
   let w=null;try{w=window.open(TEA_ROOM_URL,'_blank');}catch(e){}
-  if(!w){window.prompt('浏览器拦截了弹窗。请复制下面地址到浏览器打开茶室：',location.href.replace(/[^/]*$/, '')+'珍珠的茶室.html');}
+  if(!w){window.prompt('浏览器拦截了弹窗。请复制下面地址到浏览器打开茶室：',new URL(TEA_ROOM_URL,location.href).href);}
 }
 
 /* 同步一笔茶叶到茶室：同名追加购买批次，无同名新建并标记待完善 */
