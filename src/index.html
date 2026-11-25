@@ -485,6 +485,12 @@
       .classtabs button:active,.subtabs button:active{transform:scale(.94);transition:transform .1s}
     .x{font-size:24px;padding:4px 8px;margin:-4px -4px 0 0}
   }
+/* 待完善提示条（来自家庭小账本同步的茶） */
+.need-complete-bar{max-width:640px;margin:12px auto 0;padding:12px 16px;background:linear-gradient(135deg,#FFF3E8,#FFE9D6);border:1px solid #F5DCB8;border-radius:12px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px;color:#9A6B32}
+.need-complete-bar button{border:none;border-radius:9px;padding:7px 14px;background:#C8873C;color:#fff;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+.nc-list{max-height:52vh;overflow:auto;margin-top:12px}
+.nc-item{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:10px;background:#FAF5F1;margin-bottom:8px;font-size:14px;font-weight:600;cursor:pointer}
+.nc-item span{font-size:12px;color:#C8873C;font-weight:700}
 </style>
 <meta name="theme-color" content="#7A5230">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -510,6 +516,12 @@
   <button data-v="tasting">品鉴记录</button>
   <button data-v="calendar" class="navicon" title="喝茶日记"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg></button>
 </nav>
+
+<div id="needCompleteBar" class="need-complete-bar" style="display:none">
+  <span id="ncText"></span>
+  <button onclick="showNeedComplete()">去完善</button>
+</div>
+
 
 <div class="wrap" id="app"></div>
 <button class="fab" onclick="openAddTea()" aria-label="添加茶叶" title="添加茶叶">
@@ -2088,7 +2100,24 @@ function favCount(){ return teas.filter(t=>t.fav).length; }
 let tastingFilter='';              // 品鉴记录按茶筛选（teaId 或 ''）
 let tastingQ='';                   // 品鉴记录搜索关键词（茶名/品种/品牌/备注）
 
+/* —— 待完善提示：来自家庭小账本同步的茶叶 —— */
+function updateNeedCompleteBar(){
+  const bar=$('#needCompleteBar');if(!bar)return;
+  const pending=(teas||[]).filter(t=>t&&t.needComplete);
+  bar.style.display=pending.length?'flex':'none';
+  if(pending.length)$('#ncText').textContent='有 '+pending.length+' 款从账本同步来的茶待完善（茶名/克数已带入，其余信息待补）';
+}
+function showNeedComplete(){
+  const pending=(teas||[]).filter(t=>t&&t.needComplete);
+  if(!pending.length)return;
+  const list=pending.map(t=>'<div class="nc-item" onclick="openEditTea(\''+t.id+'\')">'+escHtml(t.name||'未命名')+' <span>点击完善 →</span></div>').join('');
+  $('#modal').innerHTML='<div class="sh-h"><div class="sh-t">待完善的茶 · '+pending.length+' 款</div><button class="x" onclick="closeMask()">×</button></div><div class="nc-list">'+list+'</div><div class="hint" style="margin-top:14px;color:#8B7B74;font-size:12px">完善并保存后，将不再提示</div>';
+  $('#mask').classList.add('on');
+}
+function escHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
 function render(){
+  updateNeedCompleteBar();
   const a=$('#app');
   if(view==='stock') a.innerHTML=viewStock();
   else if(view==='wares') a.innerHTML=viewWares();
@@ -2706,6 +2735,8 @@ function saveTea(id,isNew){
     }).map(p=>({m:(p.m||''),price:+(p.price||0),mode:p.mode||'bag',per:+(p.per||0),n:+(p.n||0),g:+(p.g||0)})),
     form:'散茶',note:'',noSpend:!($('#f_spend')?$('#f_spend').checked:true)};
   if(!obj.name){ toast('茶名不能为空'); return; }
+  /* 从账本同步来的茶：完善保存后清除待完善标记 */
+  if(cur && cur.needComplete){ delete obj.needComplete; delete obj.source; }
   if(isNew==='true'){ teas.push(obj); } else { const i=teas.findIndex(x=>x.id===id); if(i>=0) teas[i]=obj; }
   save(); closeMask(); render();
 }
