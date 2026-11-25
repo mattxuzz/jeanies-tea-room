@@ -492,7 +492,11 @@ button{cursor:pointer;border:none;background:none}
   <div class="hint" style="margin-top:18px;text-align:center">数据只存在这台设备上，记得经常备份</div>
   <div class="row" style="margin-top:10px">
     <button class="sbtn ghost" onclick="exportData()"><svg class="ic sm"><use href="#i-download"/></svg>导出备份</button>
-    <button class="sbtn ghost" onclick="document.getElementById('impFile').click()"><svg class="ic sm"><use href="#i-upload"/></svg>导入备份</button>
+    <button class="sbtn ghost" onclick="document.getElementById('impFile').click()"><svg class="ic sm"><use href="#i-upload"/></svg>文件导入</button>
+  </div>
+  <div class="fld" style="margin-top:14px"><label>从小程序迁移：粘贴备份文本</label>
+    <textarea id="pasteImport" class="input" rows="3" placeholder="在小程序「设置 → 导出备份」复制内容，粘贴到这里"></textarea>
+    <button class="sbtn ghost" style="margin-top:8px;width:100%" onclick="importPasted()">粘贴导入并同步到云端</button>
   </div>
   <input type="file" id="impFile" accept="application/json" style="display:none" onchange="importData(event)">
   <div class="hint" id="lastExport" style="text-align:center"></div>
@@ -1325,6 +1329,23 @@ function openSettings(){
   document.getElementById('lastExport').textContent=t?'上次备份：'+t:'还没备份过，建议现在导一份';openM('m-set');
 }
 function saveSettings(){DATA.openingBalance=parseFloat(document.getElementById('set-open').value)||0;save();closeM('m-set');render();toast('设置好了');}
+/* 粘贴文本导入（小程序 → 云端） */
+function importPasted(){
+  const txt=(document.getElementById('pasteImport')||{}).value||'';
+  if(!txt.trim()){toast('先粘贴备份内容');return;}
+  let d;
+  try{d=JSON.parse(txt.trim());}catch(e){toast('备份文本格式不对');return;}
+  if(!d.records&&!d.savings&&!d.stock){toast('这不是账本备份');return;}
+  if(!confirm('导入会覆盖当前账本数据，并同步到云端。确定继续吗？'))return;
+  DATA=Object.assign(defaultData(),d);
+  if(!Array.isArray(DATA.stock))DATA.stock=[];
+  if(!Array.isArray(DATA.stockCats)||!DATA.stockCats.length)DATA.stockCats=['零食','日用品','护肤品','茶叶','其他'];
+  if(!DATA.catIcons||typeof DATA.catIcons!=='object')DATA.catIcons={};
+  if(!DATA.budgets||typeof DATA.budgets!=='object')DATA.budgets={};
+  save();  // save() 会触发 _syncCloud() 上云
+  closeM('m-set');ui.homeYM=ymNow();ui.billYM=ymNow();render();
+  toast('导入成功'+( _cloudUser?'，正在同步到云端':'（登录后才会同步到云端）'));
+}
 function exportData(){
   const blob=new Blob([JSON.stringify(DATA,null,2)],{type:'application/json'}),a=document.createElement('a');
   a.href=URL.createObjectURL(blob);a.download='家庭小账本备份_'+dateNow()+'.json';a.click();URL.revokeObjectURL(a.href);
