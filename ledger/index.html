@@ -213,6 +213,17 @@ button{cursor:pointer;border:none;background:none}
 .chip-p.add{border-style:dashed;color:var(--pink);background:transparent}
 .backup-btns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
 .backup-btns .sbtn{justify-content:center;width:100%;min-height:38px;padding:8px 4px;white-space:nowrap}
+/* 报表明细 */
+.clickable{cursor:pointer;transition:background .15s}
+.clickable:hover{background:var(--bg)}
+.dt-sum{font-size:13px;color:var(--ink2);margin-bottom:12px;padding:10px 12px;background:var(--bg);border-radius:10px}
+.dt-sum b{color:var(--pink-d)}
+.dt-list{max-height:56vh;overflow:auto}
+.dt-row{padding:11px 2px;border-bottom:1px solid var(--line)}
+.dt-row:last-child{border-bottom:none}
+.dt-r1{display:flex;justify-content:space-between;font-size:13px;font-weight:600}
+.dt-r1 b{color:var(--pink-d)}
+.dt-r2{font-size:11px;color:var(--ink2);margin-top:5px}
 .cloud-box{border:1.5px solid #E7E0EC;border-radius:14px;padding:12px;margin:14px 0;background:#F9F6FD}
 .cloud-t{font-size:12px;font-weight:800;color:#6E5CB0;margin-bottom:6px}
 .cloud-s{font-size:11px;color:#8B7B74}
@@ -520,6 +531,13 @@ button{cursor:pointer;border:none;background:none}
 </div></div>
 
 <div id="toast"></div>
+
+<!-- 分类明细弹窗 -->
+<div class="mask" id="m-detail"><div class="sheet">
+  <div class="sh-h"><div class="sh-t"><svg class="ic"><use href="#i-bill"/></svg><span id="dtTitle">明细</span></div><button class="x" onclick="closeM('m-detail')"><svg class="ic sm"><use href="#i-close"/></svg></button></div>
+  <div id="dtSummary" class="dt-sum"></div>
+  <div id="dtList" class="dt-list"></div>
+</div></div>
 
 <!-- 登录遮罩 -->
 <div id="loginOverlay" style="display:none;position:fixed;inset:0;background:rgba(60,45,55,.72);z-index:9999;align-items:center;justify-content:center;">
@@ -873,16 +891,20 @@ function renderStock(){
     ${soon.map(p=>`<div class="ea-row" onclick="editStock('${p.id}')"><span>${esc(p.name)}</span>${expTag(p.expire)}</div>`).join('')}</div>`;
   if(!shown.length)h+=emptyBox('库存空空的','记账时勾选「同时入库」\n或点右上角「添加」手动录入');
   else{
-    // 按分类分组（未用完在前）
+    // 在用按分类分组；用完的单独归入「历史」
     const groups={};
-    shown.slice().sort((a,b)=>(a.used?1:0)-(b.used?1:0)).forEach(p=>{
-      const c=p.cat||'其他';(groups[c]=groups[c]||[]).push(p);
-    });
+    shown.filter(x=>!x.used).forEach(p=>{const c=p.cat||'其他';(groups[c]=groups[c]||[]).push(p);});
     stockCats().concat(Object.keys(groups).filter(c=>stockCats().indexOf(c)<0)).forEach(c=>{
       if(!groups[c]||!groups[c].length)return;
       h+=`<div class="stock-group"><div class="stock-group-t">${ic(c==='护肤品'?'heart':c==='零食'?'basket':'tag','sm')}${c} <span>${groups[c].length}</span></div>
         <div class="card">${groups[c].map(stockItemHtml).join('')}</div></div>`;
     });
+    const history=shown.filter(x=>x.used);
+    if(history.length){
+      history.sort((a,b)=>(b.usedAt||'').localeCompare(a.usedAt||''));
+      h+=`<div class="stock-group"><div class="stock-group-t">${ic('book-2','sm')}历史 <span>${history.length}</span></div>
+        <div class="card">${history.map(stockItemHtml).join('')}</div></div>`;
+    }
     h+=`<div class="hint" style="text-align:center">点物品即可划掉/恢复用完状态</div>`;
   }
   document.getElementById('page-stock').innerHTML=h;
@@ -1114,7 +1136,7 @@ function composeCard(type,scope,label){
     const stops=arr.map((a,i)=>{const start=acc;acc+=a[1]/total*100;return `${colors[i%colors.length]} ${start}% ${acc}%`;}).join(',');
     const legend=arr.map((a,i)=>{
       const pct=total?Math.round(a[1]/total*100):0;
-      return `<div class="pie-leg-row"><span class="pie-dot" style="background:${colors[i%colors.length]}"></span><span class="pie-leg-name">${esc(a[0])}</span><span class="pie-leg-val">¥${fmt(a[1])} · <b>${pct}%</b></span></div>`;
+      return `<div class="pie-leg-row clickable" onclick="openDetail('${scope||''}','expense','${esc(a[0])}')"><span class="pie-dot" style="background:${colors[i%colors.length]}"></span><span class="pie-leg-name">${esc(a[0])}</span><span class="pie-leg-val">¥${fmt(a[1])} · <b>${pct}%</b></span></div>`;
     }).join('');
     let groups='';
     arr.forEach((a,i)=>{
@@ -1122,7 +1144,7 @@ function composeCard(type,scope,label){
         .map(([sk,v])=>[sk.slice(a[0].length+1),v]).sort((x,y)=>y[1]-x[1]);
       if(!subs.length)return;
       groups+=`<div class="sub-group"><div class="sub-group-t"><span class="pie-dot" style="background:${colors[i%colors.length]}"></span>${esc(a[0])} <span class="sg-amt">¥${fmt(a[1])} · ${total?Math.round(a[1]/total*100):0}%</span></div>
-        ${subs.map(([sn,sv])=>`<div class="sub-list-row"><span>${esc(sn)}</span><span>¥${fmt(sv)} · <b>${total?Math.round(sv/total*100):0}%</b></span></div>`).join('')}</div>`;
+        ${subs.map(([sn,sv])=>`<div class="sub-list-row clickable" onclick="openDetail('${scope||''}','expense','${esc(a[0])}','${esc(sn)}')"><span>${esc(sn)}</span><span>¥${fmt(sv)} · <b>${total?Math.round(sv/total*100):0}%</b></span></div>`).join('')}</div>`;
     });
     const subSection=groups?`<div class="sub-list"><div class="sub-list-head">小类明细</div>${groups}</div>`:'';
     return `<div class="card"><div class="card-h"><div class="card-t">${ic('pie')}${title}</div><span class="link" style="color:var(--ink2)">${label}</span></div>
@@ -1130,9 +1152,31 @@ function composeCard(type,scope,label){
   }
   // 收入 / 储蓄：只分大类，条形图
   const bars=arr.map((a,i)=>{const pct=total?Math.round(a[1]/total*100):0;
-    return `<div class="bar-row"><div class="bar-lab"><span class="nm">${ic(getIcon(type,a[0]))}${esc(a[0])}</span><span class="vl">¥${fmt(a[1])} · <b>${pct}%</b></span></div>
+    return `<div class="bar-row clickable" onclick="openDetail('${scope||''}','${type}','${esc(a[0])}')"><div class="bar-lab"><span class="nm">${ic(getIcon(type,a[0]))}${esc(a[0])}</span><span class="vl">¥${fmt(a[1])} · <b>${pct}%</b></span></div>
     <div class="bar-track"><div class="bar-fill" style="width:${a[1]/max*100}%;background:${colors[i%colors.length]}"></div></div></div>`;}).join('');
   return `<div class="card"><div class="card-h"><div class="card-t">${ic('pie')}${title}</div><span class="link" style="color:var(--ink2)">${label}</span></div>${bars}</div>`;
+}
+/* 报表分类明细 */
+let _dtScope='';
+function scopeRecs(recs,scope){
+  if(scope===null||scope==='')return recs;
+  if(scope.startsWith('year:'))return recs.filter(r=>(r.date||'').slice(0,4)===scope.slice(5));
+  return recs.filter(r=>ymOf(r)===scope);
+}
+function openDetail(scope,type,big,sub){
+  _dtScope=scope;
+  let list=scopeRecs(DATA.records.filter(r=>r.type===type),scope);
+  list=list.filter(r=>big==='__all__'||(r.big||'其他')===big);
+  if(sub)list=list.filter(r=>r.sub===sub);
+  list.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const sum=list.reduce((s,r)=>s+(+r.amount||0),0);
+  document.getElementById('dtTitle').textContent=(sub||big||'全部')+' · 明细';
+  document.getElementById('dtSummary').innerHTML=`共 <b>${list.length}</b> 笔 · 合计 <b>¥${fmt(sum)}</b>`;
+  document.getElementById('dtList').innerHTML=list.length?list.map(r=>
+    `<div class="dt-row"><div class="dt-r1"><span>${esc(r.big||'其他')}${r.sub?' / '+esc(r.sub):''}</span><b>¥${fmt(r.amount)}</b></div>
+     <div class="dt-r2">${esc(r.date||'')}${r.note?' · '+esc(r.note):''}</div></div>`).join('')
+    :'<div class="hint" style="text-align:center;padding:24px">这个分类下还没有记录</div>';
+  openM('m-detail');
 }
 function composeAll(scope,label){
   return composeCard('expense',scope,label)+composeCard('income',scope,label);
