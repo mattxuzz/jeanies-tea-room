@@ -211,6 +211,9 @@ button{cursor:pointer;border:none;background:none}
 .sub-tea{display:flex;align-items:center;gap:3px;border:1px solid #EBD9C4;border-radius:11px;padding:7px 9px;background:#FFF7EC;color:#B8873F;font-size:11px;font-weight:700}
 .sub-tea .ic{width:13px;height:13px}
 .chip-p.add{border-style:dashed;color:var(--pink);background:transparent}
+.cloud-box{border:1.5px solid #E7E0EC;border-radius:14px;padding:12px;margin:14px 0;background:#F9F6FD}
+.cloud-t{font-size:12px;font-weight:800;color:#6E5CB0;margin-bottom:6px}
+.cloud-s{font-size:11px;color:#8B7B74}
 .cat-manage-row{display:flex;align-items:center;justify-content:space-between;padding:11px 12px;border-radius:12px;background:var(--bg);margin-bottom:8px;font-size:13px;font-weight:600}
 .cat-manage-row .ic{width:15px;height:15px;vertical-align:-3px;margin-right:5px}
 .cat-manage-row small{color:var(--ink2);font-weight:500;font-size:11px;margin-left:5px}
@@ -489,10 +492,19 @@ button{cursor:pointer;border:none;background:none}
   <div class="sh-h"><div class="sh-t"><svg class="ic"><use href="#i-gear"/></svg>设置与备份</div><button class="x" onclick="closeM('m-set')"><svg class="ic sm"><use href="#i-close"/></svg></button></div>
   <div class="fld"><label>期初余额（开始记账时账户里已有的钱）</label><input class="input" id="set-open" type="number" inputmode="decimal" placeholder="0"></div>
   <button class="save-btn" onclick="saveSettings()">保存设置</button>
-  <div class="hint" style="margin-top:18px;text-align:center">数据只存在这台设备上，记得经常备份</div>
+  <div class="cloud-box">
+    <div class="cloud-t">☁️ 云端同步</div>
+    <div id="cloudStatus" class="cloud-s">登录后自动同步</div>
+    <div class="row" style="margin-top:10px">
+      <button class="sbtn ghost" onclick="forceUpload()">上传本机到云端</button>
+      <button class="sbtn ghost" onclick="logoutCloud()">退出登录</button>
+    </div>
+  </div>
+  <div class="hint" style="margin-top:18px;text-align:center">登录后数据自动上云，换设备也能看到</div>
   <div class="row" style="margin-top:10px">
-    <button class="sbtn ghost" onclick="exportData()"><svg class="ic sm"><use href="#i-download"/></svg>导出备份</button>
-    <button class="sbtn ghost" onclick="document.getElementById('impFile').click()"><svg class="ic sm"><use href="#i-upload"/></svg>文件导入</button>
+    <button class="sbtn ghost" onclick="copyBackup()"><svg class="ic sm"><use href="#i-download"/></svg>复制备份</button>
+    <button class="sbtn ghost" onclick="exportData()"><svg class="ic sm"><use href="#i-download"/></svg>下载文件</button>
+    <button class="sbtn ghost" onclick="document.getElementById('impFile').click()" style="margin-top:8px"><svg class="ic sm"><use href="#i-upload"/></svg>文件导入</button>
   </div>
   <div class="fld" style="margin-top:14px"><label>从小程序迁移：粘贴备份文本</label>
     <textarea id="pasteImport" class="input" rows="3" placeholder="在小程序「设置 → 导出备份」复制内容，粘贴到这里"></textarea>
@@ -568,13 +580,32 @@ let _cloudUser=null, _syncTimer=null;
 function save(){try{localStorage.setItem(KEY,JSON.stringify(DATA));}catch(e){toast('保存失败，存储空间可能已满');}
   clearTimeout(_syncTimer);_syncTimer=setTimeout(_syncCloud,600);}
 async function _syncCloud(){
-  if(!_cloudUser)return;
+  if(!_cloudUser)return false;
   try{
-    await _SUPA.from('store').upsert([
+    const teas=(()=>{try{return JSON.parse(localStorage.getItem('tea_teas_v3')||'[]');}catch(e){return [];}})();
+    const {error}=await _SUPA.from('store').upsert([
       {user_id:_cloudUser.id,key:'finance',value:DATA},
-      {user_id:_cloudUser.id,key:'teas',value:(()=>{try{return JSON.parse(localStorage.getItem('tea_teas_v3')||'[]');}catch(e){return [];}})()}
+      {user_id:_cloudUser.id,key:'teas',value:teas}
     ],{onConflict:'user_id,key'});
-  }catch(e){}
+    if(error){console.warn('云同步失败',error);toast('云同步失败：'+(error.message||'未知错误'));return false;}
+    _markCloudSync();
+    return true;
+  }catch(e){console.warn('云同步异常',e);toast('云同步异常，请检查网络');return false;}
+}
+function _markCloudSync(){
+  try{localStorage.setItem('finance_last_sync',new Date().toISOString());}catch(e){}
+  const el=document.getElementById('cloudStatus');
+  if(el)el.textContent='已同步 '+new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'});
+}
+/* 强制把当前 localStorage 数据推到云端（覆盖云端 finance/teas） */
+async function forceUpload(){
+  if(!_cloudUser){toast('请先登录');return;}
+  const local=load();
+  if(!confirm('把当前设备的数据上传到云端，覆盖云端记录？建议先确认云端没有更新的数据。'))return;
+  DATA=local;saveLocalOnly();
+  const ok=await _syncCloud();
+  toast(ok?'本地数据已上传到云端':'上传失败，请重试');
+  render();
 }
 async function doLogin(){
   const email=document.getElementById('loginEmail').value.trim(),pwd=document.getElementById('loginPwd').value;
@@ -594,20 +625,25 @@ async function doSignup(){
 }
 async function afterLogin(){
   document.getElementById('loginOverlay').style.display='none';
+  const cs=document.getElementById('cloudStatus');if(cs)cs.textContent='已登录 · 自动同步中';
   const {data:{session}}=await _SUPA.auth.getSession();
   if(!session)return;
   _cloudUser=session.user;
   const {data}=await _SUPA.from('store').select('key,value').eq('user_id',session.user.id);
-  const m=data&&data.length?Object.fromEntries(data.map(r=>[r.key,r.value])):{};
-  if(m.finance){
-    DATA=Object.assign(defaultData(),m.finance);saveLocalOnly();
-  }else{
-    // 首次登录（全新账号 或 仅用过茶室的老账号）：把本地 localStorage 数据初始化上传到云端
-    await _syncCloud();
-    toast('首次登录，本地数据已同步到云端');
-  }
-  if(m.teas&&m.teas.length){try{localStorage.setItem('tea_teas_v3',JSON.stringify(m.teas));}catch(e){}}
-  render();if(m.finance)toast('已登录，数据云端同步中');
+  if(data&&data.length){
+    const m=Object.fromEntries(data.map(r=>[r.key,r.value]));
+    const localCnt=(DATA.records||[]).length, cloudCnt=m.finance?(m.finance.records||[]).length:0;
+    if(m.finance && cloudCnt>=localCnt){
+      DATA=Object.assign(defaultData(),m.finance);saveLocalOnly();
+    }else if(localCnt>cloudCnt){
+      /* 本地数据更多：保留本地并上传，避免被云端旧数据覆盖 */
+      try{localStorage.setItem('finance_last_sync','pending');}catch(e){}
+      await _syncCloud();
+      toast('本地数据已上传到云端');
+    }
+    if(m.teas&&m.teas.length){try{localStorage.setItem('tea_teas_v3',JSON.stringify(m.teas));}catch(e){}}
+  }else{await _syncCloud();}
+  render();
 }
 function saveLocalOnly(){try{localStorage.setItem(KEY,JSON.stringify(DATA));}catch(e){}}
 
@@ -1350,6 +1386,30 @@ function importPasted(){
   closeM('m-set');ui.homeYM=ymNow();ui.billYM=ymNow();render();
   toast('导入成功'+( _cloudUser?'，正在同步到云端':'（登录后才会同步到云端）'));
 }
+/* 复制备份到剪贴板（微信内可用） */
+function logoutCloud(){
+  if(!confirm('退出后数据仍保留在本机，确定吗？'))return;
+  try{localStorage.removeItem('su_access_token');}catch(e){}
+  _SUPA.auth.signOut&&_SUPA.auth.signOut();
+  _cloudUser=null;
+  document.getElementById('cloudStatus').textContent='未登录';
+  toast('已退出');
+}
+function copyBackup(){
+  const txt=JSON.stringify(DATA);
+  DATA.settings=DATA.settings||{};DATA.settings.lastExport=dateNow();saveLocalOnly();
+  document.getElementById('lastExport').textContent='上次备份：'+dateNow();
+  const done=()=>toast('备份已复制，可粘贴到备忘录/微信收藏保存');
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(done).catch(()=>fallbackCopy(txt,done));
+  }else fallbackCopy(txt,done);
+}
+function fallbackCopy(txt,done){
+  const ta=document.createElement('textarea');ta.value=txt;
+  ta.style.cssText='position:fixed;left:-9999px';document.body.appendChild(ta);
+  ta.select();try{document.execCommand('copy');done();}catch(e){window.prompt('请手动复制下面备份内容：',txt);}
+  document.body.removeChild(ta);
+}
 function exportData(){
   const blob=new Blob([JSON.stringify(DATA,null,2)],{type:'application/json'}),a=document.createElement('a');
   a.href=URL.createObjectURL(blob);a.download='家庭小账本备份_'+dateNow()+'.json';a.click();URL.revokeObjectURL(a.href);
@@ -1416,7 +1476,8 @@ initWhisper();
 (async function initCloud(){
   render();
   const {data:{session}}=await _SUPA.auth.getSession();
-  if(!session){document.getElementById('loginOverlay').style.display='flex';return;}
+  if(!session){document.getElementById('loginOverlay').style.display='flex';
+    const cs=document.getElementById('cloudStatus');if(cs)cs.textContent='未登录';return;}
   await afterLogin();
 })();
 </script>
