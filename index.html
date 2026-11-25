@@ -30,6 +30,9 @@
   header h1{margin:0;font-size:21px;font-weight:700;letter-spacing:3px}
   header .sub{font-size:12px;opacity:.88}
   /* 报头右侧：每日一语（节气 / 节日 / 小语），一行小字 */
+  .to-ledger{border:none;background:transparent;color:#fff;cursor:pointer;padding:6px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;opacity:.9;position:relative;z-index:1}
+  .to-ledger:hover{background:rgba(255,255,255,.15);opacity:1}
+  .to-ledger svg{width:22px;height:22px;display:block}
   .hseason{display:block;font-family:var(--serif);font-size:12px;color:rgba(255,255,255,.92);
     letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
     flex:1 1 auto;min-width:0;text-align:right}
@@ -507,6 +510,9 @@
 <header>
   <h1>珍珠的茶室</h1>
   <span class="hseason" id="hSeason"></span>
+  <button class="to-ledger" onclick="goLedger()" title="去小账本" aria-label="去小账本">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="M7 8h7M7 12h7M7 16h4"/><path d="m17 9 3 3-3 3"/></svg>
+  </button>
 </header>
 
 <nav id="nav">
@@ -2138,6 +2144,15 @@ function showNeedComplete(){
 }
 function escHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
+/* 跳转家庭小账本（同仓库 /ledger/） */
+function goLedger(){
+  /* 线上：同源 /ledger/；本地 file://：同目录的账本文件 */
+  const url=location.protocol==='file:'
+    ? new URL('家庭小账本_云同步版.html',location.href).href
+    : new URL('ledger/',location.href).href;
+  const w=window.open(url,'_blank');
+  if(!w)window.prompt('请复制地址打开小账本：',url);
+}
 function render(){
   updateNeedCompleteBar();
   const a=$('#app');
