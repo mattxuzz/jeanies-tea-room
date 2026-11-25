@@ -662,6 +662,17 @@ function openTeaRoom(){
   if(!w){window.prompt('浏览器拦截了弹窗。请复制下面地址到浏览器打开茶室：',new URL(TEA_ROOM_URL,location.href).href);}
 }
 
+/* 茶叶提交后：写标记 + 弹窗引导去茶室完善 */
+const TEA_PENDING_KEY='tea_pending_complete';
+function markTeaPending(name,grams){
+  try{localStorage.setItem(TEA_PENDING_KEY,JSON.stringify({name:name,grams:grams,ts:Date.now()}));}catch(e){}
+}
+function askGoTeaRoom(name,grams){
+  markTeaPending(name,grams);
+  if(confirm('已提交成功！\n\n去茶室完善「'+name+'」的详细信息（年份/工艺/产区等）？')){
+    openTeaRoom();
+  }
+}
 /* 同步一笔茶叶到茶室：同名追加购买批次，无同名新建并标记待完善 */
 function syncTeaPurchase(name,amount,grams,date,needComplete){
   if(!name)return {ok:false,msg:'没填茶名'};
@@ -930,9 +941,9 @@ function saveStock(){
     DATA.stock[i]=Object.assign({},DATA.stock[i],obj);saved=DATA.stock[i];}
   else{saved=Object.assign({id:uid(),used:false,recId:''},obj);DATA.stock.push(saved);}
   save();
-  let teaMsg='';
-  if(saved.cat==='茶叶'){const rr=syncStockTea(saved);teaMsg=' · '+rr.msg;}
-  closeM('m-stock');render();toast('存好啦'+teaMsg);}
+  closeM('m-stock');render();
+  if(saved.cat==='茶叶'){syncStockTea(saved);toast('存好啦');askGoTeaRoom(saved.name,saved.qty);}
+  else toast('存好啦');}
 function delStock(){
   if(!ui.stockEdit)return;
   DATA.stock=(DATA.stock||[]).filter(x=>x.id!==ui.stockEdit);
@@ -1221,13 +1232,14 @@ function saveRecord(){
       expire:document.getElementById('f-stock-exp').value||'',used:false,feeling:'',added:date,recId:rec.id});}
   }
   save();
-  let teaMsg='';
+  let teaName='',teaGrams='';
   if(ui.addType==='expense'&&ui.addSub==='茶叶'&&!ui.editId){
-    const tn=document.getElementById('f-tea-name').value.trim();
-    if(tn){const rr=syncTeaPurchase(tn,amt,document.getElementById('f-tea-g').value,date);teaMsg=' · '+rr.msg;}
-    else teaMsg=' · 茶名没填，未同步茶室';
+    teaName=document.getElementById('f-tea-name').value.trim();
+    teaGrams=document.getElementById('f-tea-g').value;
+    if(teaName)syncTeaPurchase(teaName,amt,teaGrams,date);
   }
-  closeM('m-add');ui.homeYM=ymOf(rec);ui.billYM=ymOf(rec);render();toast((ui.editId?'改好啦':'记下啦')+teaMsg);
+  closeM('m-add');ui.homeYM=ymOf(rec);ui.billYM=ymOf(rec);render();toast(ui.editId?'改好啦':'记下啦');
+  if(teaName)askGoTeaRoom(teaName,teaGrams);
 }
 function delRecord(){if(!ui.editId)return;DATA.records=DATA.records.filter(x=>x.id!==ui.editId);save();closeM('m-add');render();toast('已删除');}
 
