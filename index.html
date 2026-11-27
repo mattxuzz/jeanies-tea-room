@@ -1795,8 +1795,25 @@ async function _syncCloud(){
   try{
     const { data:{ session } } = await _SUPA.auth.getSession();
     if(!session) return;
+    /* 写前先读云端 teas，合并账本刚同步来的茶（读-改-写，避免互相覆盖） */
+    const { data:cloud } = await _SUPA.from('store').select('key,value').eq('user_id',session.user.id);
+    let mergedTeas = teas;
+    if(cloud && cloud.length){
+      const row = cloud.find(r=>r.key==='teas');
+      if(row && Array.isArray(row.value)){
+        mergedTeas = (teas||[]).slice();
+        (row.value||[]).forEach(t=>{
+          const k=(t.name||'').trim();
+          if(k && !mergedTeas.some(x=>(x.name||'').trim()===k)){
+            mergedTeas.push(t);  // 云端有、内存没有 → 补进来（账本刚同步的茶）
+          }
+        });
+        // 同步内存，界面下次 render 可见
+        teas = mergedTeas;
+      }
+    }
     await _SUPA.from('store').upsert([
-      { user_id:session.user.id, key:'teas',    value:teas    },
+      { user_id:session.user.id, key:'teas',    value:mergedTeas },
       { user_id:session.user.id, key:'wares',   value:wares   },
       { user_id:session.user.id, key:'records', value:records },
     ], { onConflict:'user_id,key' });
@@ -3393,9 +3410,18 @@ const _hadUrlData = /[?&]d=/.test(location.search||'');
   const { data } = await _SUPA.from('store').select('key,value').eq('user_id',session.user.id);
   if(data?.length){
     const m = Object.fromEntries(data.map(r=>[r.key,r.value]));
-    if(m.teas)    teas    = m.teas;
-    if(m.wares)   wares   = m.wares;
-    if(m.records) records = m.records;
+    /* 茶叶双向合并：本地独有的（被覆盖前残留）补回云端，避免数据丢失 */
+    if(Array.isArray(m.teas)){
+      const cloudTeas = m.teas;
+      const localTeas = (teas||[]).slice();
+      const merged = cloudTeas.slice();
+      const names = new Set(merged.map(t=>(t.name||'').trim()));
+      localTeas.forEach(t=>{ const k=(t.name||'').trim(); if(k&&!names.has(k)){merged.push(t);names.add(k);} });
+      teas = merged;
+      if(merged.length!==cloudTeas.length){ _syncCloud(); /* 有补回 → 推回云端 */ }
+    }
+    if(Array.isArray(m.wares))   wares   = m.wares;
+    if(Array.isArray(m.records)) records = m.records;
     try{
       localStorage.setItem(STORE_T,JSON.stringify(teas));
       localStorage.setItem(STORE_W,JSON.stringify(wares));
